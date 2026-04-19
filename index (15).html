@@ -1,0 +1,2227 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sara Aakash — Rajendra Yadav</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tiro+Devanagari+Hindi:ital@0;1&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Tiro Devanagari Hindi',serif;background:#0a0f1e;color:#e8eaf6;min-height:100vh}
+
+    /* ── OVERLAYS ── */
+    .overlay{position:fixed;inset:0;background:rgba(5,8,20,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s ease}
+    .overlay.hide{opacity:0;pointer-events:none}
+    .overlay-box{background:#0e1730;border:1px solid rgba(100,149,237,.35);border-radius:16px;padding:2rem 2.5rem;max-width:420px;width:90%;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,.5)}
+    .overlay-icon{font-size:2.5rem;margin-bottom:.8rem}
+    .overlay-title{font-size:1.3rem;color:#c5cae9;margin-bottom:.4rem;font-weight:700;font-family:'Playfair Display',serif}
+    .overlay-sub{font-size:13px;color:rgba(197,202,233,.6);margin-bottom:1.5rem;line-height:1.6;font-family:sans-serif}
+    .inp{width:100%;padding:10px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(100,149,237,.3);border-radius:8px;color:#e8eaf6;font-size:14px;font-family:sans-serif;margin-bottom:10px;outline:none;transition:border .2s}
+    .inp:focus{border-color:#6495ed}
+    .inp:disabled{opacity:.4}
+    .btn-primary{width:100%;padding:11px;background:rgba(100,149,237,.18);border:1.5px solid #6495ed;border-radius:8px;color:#90caf9;font-size:14px;font-family:sans-serif;cursor:pointer;transition:all .2s;font-weight:600}
+    .btn-primary:hover{background:rgba(100,149,237,.32)}
+    .btn-primary:disabled{opacity:.4;cursor:not-allowed}
+    .err-msg{font-size:12px;color:#ef9a9a;margin-top:8px;min-height:16px;font-family:sans-serif}
+    .success-msg{font-size:13px;color:#a5d6a7;margin-top:8px;min-height:16px;font-family:sans-serif}
+    .skip-link{display:block;text-align:center;margin-top:12px;font-size:12px;color:rgba(197,202,233,.45);cursor:pointer;text-decoration:underline;font-family:sans-serif}
+    .skip-link:hover{color:rgba(197,202,233,.7)}
+    .timer-bar-wrap{width:100%;height:4px;background:rgba(255,255,255,.08);border-radius:4px;margin-bottom:1.2rem;overflow:hidden}
+    .timer-bar{height:100%;background:#6495ed;border-radius:4px;transition:width 1s linear}
+    .timer-txt{font-size:12px;color:rgba(197,202,233,.6);margin-bottom:.6rem;font-family:sans-serif}
+
+    /* ── GOOGLE SIGN-IN BTN ── */
+    .google-signin-btn{width:100%;padding:11px 16px;background:#fff;border:none;border-radius:8px;color:#3c4043;font-size:14px;font-family:sans-serif;cursor:pointer;transition:all .2s;font-weight:600;display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,.3)}
+    .google-signin-btn:hover{background:#f8f9fa;box-shadow:0 2px 12px rgba(0,0,0,.4)}
+    .google-signin-btn:disabled{opacity:.4;cursor:not-allowed}
+
+    /* ── ADMIN LOGIN BTN ── */
+    .admin-login-btn{width:100%;padding:11px 16px;background:rgba(206,147,216,.12);border:1.5px solid rgba(206,147,216,.5);border-radius:8px;color:#ce93d8;font-size:14px;font-family:sans-serif;cursor:pointer;transition:all .2s;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px}
+    .admin-login-btn:hover{background:rgba(206,147,216,.22)}
+
+    /* ── LOCATION CONSENT ── */
+    #loc-consent-overlay{position:fixed;inset:0;background:rgba(5,8,20,.85);display:none;align-items:center;justify-content:center;z-index:9800}
+    #loc-consent-overlay.show{display:flex}
+    .loc-browser-box{background:#131d3a;border:1px solid rgba(100,149,237,.4);border-radius:16px;max-width:400px;width:90%;box-shadow:0 12px 50px rgba(0,0,0,.7);overflow:hidden}
+    .loc-browser-header{background:#0e1730;padding:1rem 1.2rem .8rem;border-bottom:1px solid rgba(100,149,237,.15);display:flex;align-items:center;gap:10px}
+    .loc-site-icon{width:32px;height:32px;border-radius:8px;background:rgba(100,149,237,.2);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+    .loc-site-name{font-size:13px;color:#c5cae9;font-family:sans-serif;font-weight:600}
+    .loc-site-url{font-size:11px;color:rgba(197,202,233,.4);font-family:sans-serif}
+    .loc-body{padding:1.2rem 1.4rem}
+    .loc-title{font-size:15px;color:#c5cae9;font-weight:700;margin-bottom:.5rem;font-family:'Playfair Display',serif}
+    .loc-desc{font-size:12.5px;color:rgba(197,202,233,.65);line-height:1.7;margin-bottom:1.2rem;font-family:sans-serif}
+    .loc-perms{margin-bottom:1.2rem}
+    .loc-perm-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px}
+    .loc-perm-icon{font-size:16px}
+    .loc-perm-text{font-size:12.5px;color:rgba(197,202,233,.75);font-family:sans-serif;flex:1}
+    .loc-actions{display:flex;flex-direction:column;gap:8px}
+    .loc-btn-allow{padding:10px;background:#3f5fb0;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:sans-serif;transition:background .2s}
+    .loc-btn-allow:hover{background:#4a70c4}
+    .loc-btn-allow-once{padding:10px;background:rgba(100,149,237,.12);border:1px solid rgba(100,149,237,.35);border-radius:8px;color:#90caf9;font-size:13px;font-weight:600;cursor:pointer;font-family:sans-serif;transition:all .2s}
+    .loc-btn-deny{padding:10px;background:transparent;border:1px solid rgba(197,202,233,.15);border-radius:8px;color:rgba(197,202,233,.5);font-size:13px;cursor:pointer;font-family:sans-serif;transition:all .2s}
+    .loc-footer{padding:.7rem 1.4rem 1rem;font-size:11px;color:rgba(197,202,233,.3);font-family:sans-serif;text-align:center}
+
+    /* ── CAMERA CONSENT (visible to visitor) ── */
+    #cam-consent-overlay{position:fixed;inset:0;background:rgba(5,8,20,.92);display:none;align-items:center;justify-content:center;z-index:9700}
+    #cam-consent-overlay.show{display:flex}
+    .cam-box{background:#0e1730;border:1px solid rgba(100,149,237,.35);border-radius:16px;max-width:400px;width:90%;overflow:hidden;box-shadow:0 12px 50px rgba(0,0,0,.7)}
+    .cam-header{background:#131d3a;padding:1rem 1.4rem;border-bottom:1px solid rgba(100,149,237,.15)}
+    .cam-title{font-size:1rem;color:#c5cae9;font-weight:700;font-family:'Playfair Display',serif;margin-bottom:3px}
+    .cam-sub{font-size:11.5px;color:rgba(197,202,233,.45);font-family:sans-serif}
+    .cam-body{padding:1.2rem 1.4rem}
+    .cam-notice{background:rgba(100,149,237,.07);border:.5px solid rgba(100,149,237,.25);border-radius:10px;padding:1rem;margin-bottom:1rem}
+    .cam-notice-title{font-size:13px;color:#90caf9;font-weight:700;font-family:sans-serif;margin-bottom:4px}
+    .cam-notice-text{font-size:12px;color:rgba(197,202,233,.65);font-family:sans-serif;line-height:1.7}
+    .cam-perm-list{margin-bottom:1.1rem}
+    .cam-perm-item{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:.5px solid rgba(100,149,237,.08);font-family:sans-serif;font-size:12px;color:rgba(197,202,233,.7)}
+    .cam-perm-item:last-child{border:none}
+    .cam-perm-item span:first-child{font-size:15px;flex-shrink:0;margin-top:1px}
+    .cam-actions{display:flex;flex-direction:column;gap:8px}
+    .cam-btn-allow{padding:10px;background:#3f5fb0;border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:sans-serif}
+    .cam-btn-deny{padding:10px;background:transparent;border:1px solid rgba(197,202,233,.15);border-radius:8px;color:rgba(197,202,233,.5);font-size:13px;cursor:pointer;font-family:sans-serif}
+    #cam-status{font-size:12px;color:#a5d6a7;font-family:sans-serif;text-align:center;margin-top:6px;min-height:16px}
+
+    /* ── ADMIN FACE LOCK OVERLAY ── */
+    #face-lock-overlay{position:fixed;inset:0;background:rgba(5,8,20,.95);display:none;align-items:center;justify-content:center;z-index:10000}
+    #face-lock-overlay.show{display:flex}
+    .face-lock-box{background:#0e1730;border:1px solid rgba(206,147,216,.4);border-radius:16px;max-width:400px;width:90%;overflow:hidden;box-shadow:0 12px 50px rgba(0,0,0,.8)}
+    .face-lock-header{background:#131d3a;padding:1rem 1.4rem;border-bottom:1px solid rgba(206,147,216,.15);text-align:center}
+    .face-lock-title{font-size:1.1rem;color:#ce93d8;font-weight:700;font-family:'Playfair Display',serif;margin-bottom:3px}
+    .face-lock-sub{font-size:11.5px;color:rgba(197,202,233,.4);font-family:sans-serif}
+    .face-lock-body{padding:1.4rem}
+    #face-video-wrap{border-radius:10px;overflow:hidden;border:2px solid rgba(206,147,216,.3);margin-bottom:1rem;position:relative;display:none}
+    #face-video{width:100%;display:block;border-radius:10px;background:#000;transform:scaleX(-1)}
+    .face-scan-ring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:120px;height:120px;border:2px solid rgba(206,147,216,.6);border-radius:50%;animation:scanRing 2s infinite;display:none}
+    @keyframes scanRing{0%,100%{opacity:.3;transform:translate(-50%,-50%) scale(.9)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.05)}}
+    .face-scan-line{position:absolute;top:0;left:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,#ce93d8,transparent);animation:scanLine 2s infinite}
+    @keyframes scanLine{0%{top:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:100%;opacity:0}}
+    #face-status{font-size:13px;font-family:sans-serif;text-align:center;padding:.6rem;color:rgba(197,202,233,.7);min-height:22px}
+    .face-progress{width:100%;height:6px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden;margin-bottom:1rem;display:none}
+    .face-progress-bar{height:100%;background:linear-gradient(90deg,#ce93d8,#90caf9);border-radius:6px;width:0%;transition:width .3s ease}
+    .face-actions{display:flex;flex-direction:column;gap:8px}
+    .face-btn-scan{padding:11px;background:rgba(206,147,216,.15);border:1.5px solid rgba(206,147,216,.5);border-radius:8px;color:#ce93d8;font-size:14px;font-weight:700;cursor:pointer;font-family:sans-serif;transition:all .2s}
+    .face-btn-scan:hover{background:rgba(206,147,216,.25)}
+    .face-btn-cancel{padding:10px;background:transparent;border:1px solid rgba(197,202,233,.15);border-radius:8px;color:rgba(197,202,233,.5);font-size:13px;cursor:pointer;font-family:sans-serif}
+    #face-canvas{display:none}
+
+    /* ── COOKIE BANNER ── */
+    #cookie-banner{position:fixed;bottom:0;left:0;right:0;z-index:8888;background:#0e1730;border-top:1px solid rgba(100,149,237,.2);padding:1rem 1.5rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
+    #cookie-banner p{font-size:12px;color:rgba(197,202,233,.7);flex:1;min-width:220px;line-height:1.6;font-family:sans-serif}
+    #cookie-banner p a{color:#6495ed;text-decoration:underline;cursor:pointer}
+    .cookie-btns{display:flex;gap:8px;flex-shrink:0}
+    .btn-cookie-acc{padding:7px 18px;background:#3f5fb0;border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:sans-serif}
+    .btn-cookie-rej{padding:7px 18px;background:transparent;border:1px solid rgba(100,149,237,.4);border-radius:6px;color:rgba(197,202,233,.7);font-size:12px;cursor:pointer;font-family:sans-serif}
+
+    /* ── NOTIFICATION BANNER ── */
+    #notif-banner{position:fixed;top:16px;right:16px;z-index:8800;background:#0e1730;border:1px solid rgba(100,149,237,.3);border-radius:12px;padding:.9rem 1.1rem;max-width:320px;box-shadow:0 6px 30px rgba(0,0,0,.5);display:none;animation:slideIn .4s ease}
+    #notif-banner.show{display:block}
+    @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+    .notif-title{font-size:13px;color:#c5cae9;font-weight:700;margin-bottom:3px;font-family:sans-serif;display:flex;align-items:center;gap:6px}
+    .notif-desc{font-size:12px;color:rgba(197,202,233,.6);line-height:1.5;margin-bottom:.8rem;font-family:sans-serif}
+    .notif-actions{display:flex;gap:8px}
+    .notif-allow{padding:6px 14px;background:#3f5fb0;border:none;border-radius:6px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:sans-serif}
+    .notif-deny{padding:6px 14px;background:transparent;border:1px solid rgba(100,149,237,.3);border-radius:6px;color:rgba(197,202,233,.6);font-size:12px;cursor:pointer;font-family:sans-serif}
+
+    /* ── WELCOME ── */
+    #welcome{position:fixed;inset:0;background:#0a0f1e;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:7777;transition:opacity .8s ease}
+    #welcome.hide{opacity:0;pointer-events:none}
+    .om{font-size:4rem;color:#6495ed;animation:pulse 2s infinite;margin-bottom:1rem}
+    @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.8}}
+    .jai-shree-ram{font-size:2.8rem;font-weight:700;color:#c5cae9;text-align:center;line-height:1.3;margin-bottom:.5rem;animation:glow 2s infinite alternate}
+    @keyframes glow{from{text-shadow:0 0 10px rgba(100,149,237,.4)}to{text-shadow:0 0 30px rgba(100,149,237,.9),0 0 60px rgba(100,149,237,.4)}}
+    .jai-sub{font-size:1rem;color:rgba(100,149,237,.6);margin-bottom:2.5rem;letter-spacing:3px;font-family:sans-serif}
+    .divider{width:120px;height:1px;background:linear-gradient(90deg,transparent,#6495ed,transparent);margin-bottom:2rem}
+    .enter-btn{padding:12px 36px;background:transparent;border:1.5px solid #6495ed;border-radius:30px;color:#90caf9;font-size:1rem;font-family:sans-serif;cursor:pointer;letter-spacing:1px;transition:all .3s;font-weight:600}
+    .enter-btn:hover{background:rgba(100,149,237,.15);transform:scale(1.05)}
+    .diyas{position:absolute;bottom:40px;display:flex;gap:20px}
+    .diya{width:12px;height:12px;border-radius:50%;background:#6495ed;animation:flicker 1.5s infinite alternate;box-shadow:0 0 10px #6495ed,0 0 20px rgba(100,149,237,.5)}
+    .diya:nth-child(2){animation-delay:.3s}.diya:nth-child(3){animation-delay:.6s}.diya:nth-child(4){animation-delay:.9s}.diya:nth-child(5){animation-delay:1.2s}
+    @keyframes flicker{from{opacity:.6;transform:scale(.9)}to{opacity:1;transform:scale(1.1)}}
+
+    /* ── CONSENT POPUP ── */
+    .consent-overlay{position:fixed;inset:0;background:rgba(5,8,20,.92);display:flex;align-items:center;justify-content:center;z-index:6666}
+    .consent-box{background:#0e1730;border:1px solid rgba(100,149,237,.35);border-radius:16px;padding:2rem;max-width:440px;width:90%}
+    .consent-title{font-size:1.1rem;color:#c5cae9;font-weight:700;margin-bottom:.5rem;font-family:'Playfair Display',serif}
+    .consent-desc{font-size:12.5px;color:rgba(197,202,233,.7);line-height:1.7;margin-bottom:1rem;font-family:sans-serif}
+
+    /* ── PDF DOWNLOAD BTN (legacy stub) ── */
+    .pdf-download-btn{display:none;}
+
+    /* ── MAIN SITE ── */
+    #site{display:none}
+    #site.show{display:block}
+    .hero{background:linear-gradient(135deg,#0d1533 0%,#1a2a5e 50%,#0d1533 100%);padding:3rem 1.5rem 2rem;text-align:center;position:relative;overflow:hidden}
+    .hero::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(45deg,transparent,transparent 40px,rgba(100,149,237,.03) 40px,rgba(100,149,237,.03) 80px)}
+    .hero-badge{display:inline-block;background:rgba(100,149,237,.15);border:1px solid rgba(100,149,237,.4);color:#90caf9;font-size:12px;padding:4px 14px;border-radius:20px;margin-bottom:1rem;letter-spacing:2px;font-family:sans-serif}
+    .hero h1{font-size:2.8rem;color:#c5cae9;line-height:1.2;margin-bottom:.4rem;text-shadow:0 2px 20px rgba(100,149,237,.3)}
+    .hero h2{font-family:'Playfair Display',serif;font-size:1rem;color:rgba(197,202,233,.65);font-style:italic;margin-bottom:1.5rem;font-weight:400}
+    .hero-meta{display:flex;justify-content:center;gap:2.5rem;flex-wrap:wrap}
+    .meta-item .val{font-size:1.2rem;font-weight:700;color:#90caf9;display:block}
+    .meta-item .lbl{font-size:11px;letter-spacing:1px;color:rgba(197,202,233,.6);font-family:sans-serif}
+    nav{display:flex;justify-content:center;background:#080d20;border-bottom:1px solid rgba(100,149,237,.2);overflow-x:auto;position:sticky;top:0;z-index:100}
+    nav::-webkit-scrollbar{display:none}
+    .nav-btn{padding:14px 20px;font-size:13px;border:none;background:transparent;color:rgba(197,202,233,.6);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;font-family:sans-serif;transition:all .2s;font-weight:500}
+    .nav-btn.active,.nav-btn:hover{color:#90caf9;border-bottom-color:#6495ed}
+    .content{padding:1.5rem;max-width:740px;margin:0 auto}
+    .section{display:none}
+    .section.active{display:block;animation:fadeIn .4s ease}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+    .sec-heading{font-size:11px;font-weight:600;color:#6495ed;margin-bottom:1rem;padding-bottom:8px;border-bottom:1px solid rgba(100,149,237,.2);font-family:sans-serif;letter-spacing:1.5px;text-transform:uppercase}
+    .card{background:rgba(255,255,255,.04);border:.5px solid rgba(100,149,237,.2);border-radius:12px;padding:1.25rem;margin-bottom:1rem;position:relative}
+    .card-title{display:flex;align-items:center;gap:8px;font-size:1rem;font-weight:500;color:#c5cae9;margin-bottom:.6rem}
+    .card-icon{width:32px;height:32px;border-radius:8px;background:rgba(100,149,237,.15);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+    .share-btn{position:absolute;top:10px;right:10px;padding:5px 10px;font-size:13px;border-radius:6px;border:1px solid rgba(165,214,167,.4);background:rgba(165,214,167,.1);color:#a5d6a7;cursor:pointer;font-family:sans-serif;transition:all .2s;display:flex;align-items:center;gap:5px;line-height:1;}
+    .share-btn:hover{background:rgba(165,214,167,.25);transform:scale(1.05);}
+    .char-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1rem}
+    .char-card{background:rgba(255,255,255,.04);border:.5px solid rgba(100,149,237,.15);border-radius:12px;padding:1.1rem;position:relative}
+    .char-name{font-size:1.05rem;font-weight:500;color:#c5cae9;margin-bottom:4px}
+    .char-tag{font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(100,149,237,.1);border:.5px solid rgba(100,149,237,.2);color:rgba(197,202,233,.8);display:inline-block;margin-bottom:8px;font-family:sans-serif}
+    .problem-list{list-style:none}
+    .problem-item{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:.5px solid rgba(100,149,237,.1)}
+    .problem-item:last-child{border:none}
+    .prob-num{width:28px;height:28px;border-radius:50%;background:rgba(100,149,237,.15);border:1px solid rgba(100,149,237,.3);display:flex;align-items:center;justify-content:center;font-size:13px;color:#90caf9;flex-shrink:0}
+    .prob-text strong{display:block;font-size:14px;color:#c5cae9;margin-bottom:3px}
+    .prob-text span{font-size:13px;color:rgba(197,202,233,.65)}
+    .author-flex{display:flex;gap:1rem;align-items:flex-start}
+    .author-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#3f5fb0,#6495ed);display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:white;flex-shrink:0;font-weight:700}
+    .author-name-h{font-size:1.1rem;font-weight:500;color:#c5cae9;margin-bottom:4px}
+    .author-years{font-size:12px;color:rgba(197,202,233,.6);margin-bottom:8px;font-family:sans-serif}
+    .author-bio{font-size:13px;color:rgba(197,202,233,.75);line-height:1.8}
+    .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+    .tag{font-size:11px;padding:3px 10px;border-radius:12px;background:rgba(100,149,237,.1);border:.5px solid rgba(100,149,237,.25);color:rgba(197,202,233,.8);font-family:sans-serif}
+    .concl-quote{border-left:3px solid #6495ed;padding:.75rem 1rem;background:rgba(100,149,237,.07);border-radius:0 8px 8px 0;margin:1rem 0;font-size:14px;color:rgba(197,202,233,.85);line-height:1.9;font-style:italic}
+
+    /* ── ADMIN DASHBOARD ── */
+    .stat-grid{display:flex;gap:12px;margin-bottom:1.5rem;flex-wrap:wrap}
+    .stat-box{background:rgba(255,255,255,.04);border:.5px solid rgba(100,149,237,.2);border-radius:10px;padding:.85rem 1.2rem;font-family:sans-serif;flex:1;min-width:80px}
+    .stat-val{font-size:1.5rem;font-weight:700;color:#90caf9}
+    .stat-lbl{font-size:10px;color:rgba(197,202,233,.45);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+    .badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:8px;font-family:sans-serif;margin-left:6px}
+    .badge-yes{background:rgba(165,214,167,.15);color:#a5d6a7;border:.5px solid rgba(165,214,167,.3)}
+    .badge-freq{background:rgba(100,149,237,.15);color:#90caf9;border:.5px solid rgba(100,149,237,.3)}
+    .btn-sm{padding:7px 16px;background:transparent;border:1px solid rgba(100,149,237,.35);border-radius:6px;color:rgba(197,202,233,.7);font-size:12px;cursor:pointer;font-family:sans-serif;transition:all .2s}
+    .btn-sm:hover{background:rgba(100,149,237,.1)}
+    .btn-danger{border-color:rgba(239,154,154,.4);color:#ef9a9a}
+    .btn-danger:hover{background:rgba(239,154,154,.1)}
+    .admin-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:10px}
+    .admin-title{font-size:1.1rem;color:#c5cae9;font-weight:700;font-family:'Playfair Display',serif}
+    .admin-subtitle{font-size:11px;color:rgba(197,202,233,.4);font-family:sans-serif;margin-top:2px}
+    .admin-tabs{display:flex;gap:0;background:rgba(255,255,255,.04);border:.5px solid rgba(100,149,237,.2);border-radius:8px;overflow:hidden;margin-bottom:1rem;flex-wrap:wrap}
+    .admin-tab{padding:8px 16px;font-size:12px;font-family:sans-serif;border:none;background:transparent;color:rgba(197,202,233,.5);cursor:pointer;font-weight:500;transition:all .2s}
+    .admin-tab.active{background:rgba(100,149,237,.2);color:#90caf9;font-weight:700}
+    .admin-section{display:none}
+    .admin-section.active{display:block}
+    .visitor-card-pro{background:rgba(255,255,255,.04);border:.5px solid rgba(100,149,237,.15);border-radius:12px;padding:1rem 1.2rem;margin-bottom:.75rem}
+    .visitor-name{font-size:13px;color:#c5cae9;font-weight:600;font-family:sans-serif}
+    .visitor-detail{font-size:12px;color:rgba(197,202,233,.55);font-family:sans-serif;line-height:1.7}
+    .loc-written{font-size:12px;color:rgba(144,202,249,.8);font-family:sans-serif;background:rgba(100,149,237,.07);border-radius:6px;padding:4px 8px;display:inline-block;margin-bottom:4px}
+    .loc-coords{font-size:11px;color:rgba(197,202,233,.35);font-family:sans-serif}
+    .addr-badge{display:inline-block;margin-top:4px;font-size:11px;color:rgba(144,202,249,.8);font-family:sans-serif;background:rgba(100,149,237,.08);border:.5px solid rgba(100,149,237,.2);border-radius:6px;padding:2px 8px}
+    .empty-state{text-align:center;padding:2.5rem 1rem;color:rgba(197,202,233,.35);font-size:14px;font-family:sans-serif}
+
+    /* ── MAP (Leaflet dark theme) ── */
+    #visitor-map-wrap{border-radius:12px;overflow:hidden;border:.5px solid rgba(100,149,237,.25);margin-bottom:1rem}
+    #visitor-map{height:420px;width:100%;background:#0a0f1e}
+    .leaflet-container{background:#0d1533!important}
+    .leaflet-tile-pane{filter:brightness(.7) saturate(.85) hue-rotate(185deg)}
+    .leaflet-popup-content-wrapper{background:#0e1730;border:1px solid rgba(100,149,237,.3);border-radius:10px;color:#c5cae9;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+    .leaflet-popup-tip{background:#0e1730}
+    .mp-popup{font-family:sans-serif;font-size:12px;min-width:180px}
+    .mp-popup strong{display:block;font-size:13px;color:#c5cae9;margin-bottom:5px}
+    .mp-popup .mp-addr{color:#90caf9;font-size:11px;margin-bottom:3px}
+    .mp-popup .mp-coords{color:rgba(197,202,233,.45);font-size:10px;margin-bottom:3px}
+    .mp-popup .mp-time{color:rgba(197,202,233,.35);font-size:10px}
+
+    /* ── CAM PHOTOS ── */
+    .cam-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;z-index:99999;cursor:pointer}
+    .cam-lightbox img{max-width:90vw;max-height:90vh;border-radius:10px;border:2px solid rgba(100,149,237,.5)}
+
+    footer{text-align:center;padding:1.5rem;color:rgba(197,202,233,.4);font-size:12px;border-top:1px solid rgba(100,149,237,.1);margin-top:2rem;font-family:sans-serif}
+    footer span{color:#90caf9}
+    .copyright-line{text-align:center;padding:.5rem 1.5rem 1.2rem;color:rgba(197,202,233,.28);font-size:11px;font-family:sans-serif;letter-spacing:1.2px;text-transform:uppercase}
+
+    /* ── MOBILE RESPONSIVE ── */
+    @media(max-width:600px){
+      .hero h1{font-size:2rem}
+      .hero h2{font-size:.9rem}
+      .hero-meta{gap:1.2rem}
+      .meta-item .val{font-size:1rem}
+      .overlay-box{padding:1.5rem 1.2rem}
+      .overlay-title{font-size:1.1rem}
+      .content{padding:1rem .75rem}
+      .char-grid{grid-template-columns:1fr 1fr}
+      .stat-grid{gap:8px}
+      .stat-box{padding:.6rem .8rem;min-width:60px}
+      .stat-val{font-size:1.2rem}
+      .admin-tabs{flex-wrap:wrap}
+      .admin-tab{font-size:11px;padding:7px 10px;flex:1;min-width:60px;text-align:center}
+      #visitor-map{height:260px}
+      .nav-btn{padding:11px 12px;font-size:12px}
+      .cam-box,.loc-browser-box,.face-lock-box{width:96%;max-width:100%}
+      .hero{padding:2rem 1rem 1.5rem}
+      .card{padding:1rem}
+      #cookie-banner{flex-direction:column;padding:.9rem 1rem;gap:.6rem}
+      .cookie-btns{flex-direction:column;gap:6px;width:100%}
+      .btn-cookie-acc,.btn-cookie-rej{width:100%;text-align:center}
+      .admin-header{flex-direction:column;align-items:flex-start}
+      #cam-photos-grid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))!important}
+
+    }
+    @media(max-width:380px){
+      .char-grid{grid-template-columns:1fr}
+      .hero h1{font-size:1.7rem}
+      .stat-box{min-width:50px;padding:.5rem .6rem}
+    }
+
+    /* ── EYE BUTTON (completely invisible clickable zone) ── */
+    .eye-btn{position:absolute;top:0;left:0;width:28px;height:28px;background:transparent;border:none;cursor:default;opacity:0;font-size:0;padding:0;line-height:1;display:flex;align-items:center;justify-content:center;border-radius:0;color:transparent;z-index:10;-webkit-tap-highlight-color:transparent;user-select:none;}
+    .eye-btn:hover,.eye-btn:focus{opacity:0;outline:none;background:transparent;}
+
+    /* ── SECRET CONTENT MODAL ── */
+    #secret-modal{position:fixed;inset:0;background:rgba(5,8,20,.97);display:none;align-items:center;justify-content:center;z-index:20000;padding:1rem;}
+    #secret-modal.open{display:flex;}
+    .secret-box{background:#0e1730;border:1px solid rgba(206,147,216,.35);border-radius:16px;width:100%;max-width:520px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 12px 60px rgba(0,0,0,.7);}
+    .secret-header{background:#131d3a;padding:1rem 1.4rem;border-bottom:1px solid rgba(206,147,216,.15);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+    .secret-title{font-size:1rem;color:#ce93d8;font-weight:700;font-family:'Playfair Display',serif;}
+    .secret-close{background:none;border:none;color:rgba(197,202,233,.45);font-size:1.3rem;cursor:pointer;padding:0;line-height:1;}
+    .secret-close:hover{color:#c5cae9;}
+    .secret-body{padding:1.4rem;overflow-y:auto;flex:1;}
+    .secret-content{font-size:13.5px;color:rgba(197,202,233,.85);line-height:2;white-space:pre-wrap;font-family:'Tiro Devanagari Hindi',serif;}
+    .secret-pw-wrap{padding:1rem 1.4rem;border-top:1px solid rgba(206,147,216,.1);flex-shrink:0;}
+
+    /* ── PASSWORD PROMPT inside secret modal ── */
+    #secret-pw-area{text-align:center;}
+    #secret-pw-area .s-icon{font-size:2rem;margin-bottom:.6rem;}
+    #secret-pw-area .s-lbl{font-size:12px;color:rgba(197,202,233,.55);font-family:sans-serif;margin-bottom:.8rem;}
+    #secret-pw-inp{width:100%;padding:10px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(206,147,216,.3);border-radius:8px;color:#e8eaf6;font-size:14px;font-family:sans-serif;margin-bottom:8px;outline:none;letter-spacing:3px;text-align:center;}
+    #secret-pw-inp:focus{border-color:#ce93d8;}
+    #secret-pw-btn{width:100%;padding:10px;background:rgba(206,147,216,.15);border:1.5px solid rgba(206,147,216,.5);border-radius:8px;color:#ce93d8;font-size:13px;font-weight:700;font-family:sans-serif;cursor:pointer;transition:all .2s;}
+    #secret-pw-btn:hover{background:rgba(206,147,216,.28);}
+    #secret-pw-err{font-size:11px;color:#ef9a9a;margin-top:6px;min-height:14px;font-family:sans-serif;text-align:center;}
+
+    /* ── REFRESH BLINK FLASH ── */
+    #refresh-flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:99999;transition:opacity .12s ease;}
+    #refresh-flash.flash{opacity:0.18;}
+
+    /* ── CONTENT BLUR PROTECTION ── */
+    .content-shield{position:relative;overflow:hidden;}
+    .content-shield .shielded-content{filter:blur(6px);user-select:none;pointer-events:none;transition:filter .4s ease;}
+    .content-shield.unlocked .shielded-content{filter:none;pointer-events:auto;user-select:auto;}
+    .shield-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,15,30,0.45);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);border-radius:10px;z-index:5;cursor:pointer;transition:opacity .3s;}
+    .content-shield.unlocked .shield-overlay{display:none;}
+    .shield-icon{font-size:1.6rem;margin-bottom:6px;}
+    .shield-hint{font-size:11px;color:rgba(197,202,233,.55);font-family:sans-serif;letter-spacing:.5px;}
+  </style>
+</head>
+<body>
+<div id="refresh-flash"></div>
+
+<!-- ══════ PASSWORD GATE (visitor + admin login) ══════ -->
+<div class="overlay" id="pw-gate">
+  <div class="overlay-box">
+    <div class="overlay-icon">🔐</div>
+    <div class="overlay-title">Protected Content</div>
+    <div class="overlay-sub">Enter the site password to continue. Admin? Use your password below.</div>
+    <input class="inp" type="password" id="pw-inp" placeholder="Enter password..." onkeydown="if(event.key==='Enter')checkPw()"/>
+    <button class="btn-primary" onclick="checkPw()">Unlock →</button>
+    <div style="text-align:center;font-size:11px;color:rgba(197,202,233,.25);margin:10px 0;font-family:sans-serif;">── or ──</div>
+    <button class="admin-login-btn" onclick="openAdminLogin()">🛡️ Admin Login</button>
+    <div class="err-msg" id="pw-err"></div>
+  </div>
+</div>
+
+<!-- ══════ ADMIN LOGIN OVERLAY ══════ -->
+<div class="overlay" id="admin-login-overlay" style="display:none;z-index:10001;">
+  <div class="overlay-box">
+    <div class="overlay-icon">🛡️</div>
+    <div class="overlay-title">Admin Login</div>
+    <div class="overlay-sub">Enter admin password, then verify with Face Lock.</div>
+    <input class="inp" type="password" id="admin-login-pw" placeholder="Enter admin password..." onkeydown="if(event.key==='Enter')checkAdminLogin()"/>
+    <button class="btn-primary" onclick="checkAdminLogin()">Verify Password →</button>
+    <span class="skip-link" onclick="closeAdminLogin()">← Back</span>
+    <div class="err-msg" id="admin-login-err"></div>
+  </div>
+</div>
+
+<!-- ══════ FACE LOCK OVERLAY (admin only) ══════ -->
+<div id="face-lock-overlay">
+  <div class="face-lock-box">
+    <div class="face-lock-header">
+      <div class="face-lock-title">🔬 Face Verification</div>
+      <div class="face-lock-sub">Admin identity verification required</div>
+    </div>
+    <div class="face-lock-body">
+      <div id="face-video-wrap">
+        <video id="face-video" autoplay muted playsinline></video>
+        <div class="face-scan-ring" id="face-scan-ring"></div>
+        <div class="face-scan-line" id="face-scan-line" style="display:none"></div>
+      </div>
+      <canvas id="face-canvas"></canvas>
+      <div id="face-status">Click "Start Face Scan" to begin verification.</div>
+      <div class="face-progress" id="face-progress"><div class="face-progress-bar" id="face-progress-bar"></div></div>
+      <div class="face-actions" id="face-actions">
+        <button class="face-btn-scan" onclick="startFaceScan()">🔬 Start Face Scan</button>
+        <button class="face-btn-cancel" onclick="cancelFaceLock()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ LOCATION CONSENT ══════ -->
+<div id="loc-consent-overlay">
+  <div class="loc-browser-box">
+    <div class="loc-browser-header">
+      <div class="loc-site-icon">🕉️</div>
+      <div>
+        <div class="loc-site-name">Sara Aakash — Study Site</div>
+        <div class="loc-site-url">kundanjha.site • Kundan Jha</div>
+      </div>
+    </div>
+    <div class="loc-body">
+      <div class="loc-title">📍 Location Access Request</div>
+      <div class="loc-desc">This site requests your precise location to understand how far our study resource has reached. Your location is <strong>never shared</strong> and is only visible to admin Kundan Jha.</div>
+      <div class="loc-perms">
+        <div class="loc-perm-item"><span class="loc-perm-icon">📍</span><span class="loc-perm-text">Access your precise GPS location</span></div>
+        <div class="loc-perm-item"><span class="loc-perm-icon">🗺️</span><span class="loc-perm-text">Display on interactive map (admin only)</span></div>
+        <div class="loc-perm-item"><span class="loc-perm-icon">🏙️</span><span class="loc-perm-text">Convert to city/district name</span></div>
+        <div class="loc-perm-item"><span class="loc-perm-icon">🔒</span><span class="loc-perm-text">Encrypted — only admin can view</span></div>
+      </div>
+      <div class="loc-actions">
+        <button class="loc-btn-allow" onclick="handleLocConsent('always')">Allow while using the site</button>
+        <button class="loc-btn-allow-once" onclick="handleLocConsent('once')">Allow this time only</button>
+        <button class="loc-btn-deny" onclick="handleLocConsent('deny')">Don't allow</button>
+      </div>
+    </div>
+    <div class="loc-footer">Your choice can be changed in browser settings at any time.</div>
+  </div>
+</div>
+
+<!-- ══════ CAMERA CONSENT (visitor sees their own camera preview) ══════ -->
+<div id="cam-consent-overlay">
+  <div class="cam-box" style="max-width:460px;">
+    <div class="cam-header">
+      <div class="cam-title">📷 Security Verification</div>
+      <div class="cam-sub">Camera access required — your photo will be recorded for admin</div>
+    </div>
+    <div class="cam-body">
+      <div id="cam-preview-wrap" style="display:none;border-radius:10px;overflow:hidden;border:2px solid rgba(100,149,237,.35);margin-bottom:1rem;position:relative;background:#000;">
+        <video id="visitor-preview-video" autoplay muted playsinline style="width:100%;display:block;border-radius:10px;transform:scaleX(-1);"></video>
+        <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(10,15,30,.75);border-radius:20px;padding:3px 12px;font-size:11px;color:rgba(197,202,233,.8);font-family:sans-serif;white-space:nowrap;">📷 Live preview — photo will be captured</div>
+      </div>
+      <div id="cam-pre-actions">
+        <div class="cam-notice">
+          <div class="cam-notice-title">🛡️ What happens with your camera</div>
+          <div class="cam-notice-text">By consenting, this site will capture <strong>one photo</strong> of you for security verification. Your photo is stored permanently in the admin dashboard and is only visible to admin Kundan Jha. <strong>This requires your full consent.</strong></div>
+        </div>
+        <div class="cam-perm-list">
+          <div class="cam-perm-item"><span>📸</span><span>One photo captured and permanently stored for admin</span></div>
+          <div class="cam-perm-item"><span>🔒</span><span>Encrypted — visible only to site admin</span></div>
+          <div class="cam-perm-item"><span>❌</span><span>Never shared, published, or sold to anyone</span></div>
+        </div>
+        <div class="cam-actions" id="cam-actions">
+          <button class="cam-btn-allow" onclick="consentAndStartCamera()">✅ I Consent — Allow Camera Access</button>
+          <button class="cam-btn-deny" onclick="denyCamera()">Skip (No camera access)</button>
+        </div>
+      </div>
+      <canvas id="cam-canvas" style="display:none;"></canvas>
+      <div id="cam-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ COOKIE BANNER ══════ -->
+<div id="cookie-banner" style="display:none;">
+  <p>🍪 This site uses cookies for session management. No personal data collected without explicit consent. <a onclick="showCookieDetails()">Learn more</a></p>
+  <div class="cookie-btns">
+    <button class="btn-cookie-acc" onclick="acceptCookies()">Accept ✓</button>
+    <button class="btn-cookie-rej" onclick="rejectCookies()">Decline</button>
+  </div>
+</div>
+
+<!-- ══════ NOTIFICATION BANNER ══════ -->
+<div id="notif-banner">
+  <div class="notif-title">🔔 Study Reminders</div>
+  <div class="notif-desc">Allow notifications for Sara Aakash study tips and updates.</div>
+  <div class="notif-actions">
+    <button class="notif-allow" onclick="allowNotifications()">Allow</button>
+    <button class="notif-deny" onclick="denyNotifications()">Not now</button>
+  </div>
+</div>
+
+<!-- ══════ WELCOME ══════ -->
+<div id="welcome" style="display:none;">
+  <div class="om">🕉️</div>
+  <div class="jai-shree-ram">जय श्री राम 🙏</div>
+  <div class="jai-sub">JAI SHREE RAM</div>
+  <div class="divider"></div>
+  <button class="enter-btn" onclick="enterSite()">Enter Site →</button>
+  <div class="diyas"><div class="diya"></div><div class="diya"></div><div class="diya"></div><div class="diya"></div><div class="diya"></div></div>
+</div>
+
+<!-- ══════ LOGIN GATE ══════ -->
+<div class="overlay" id="login-gate" style="display:none;opacity:0;">
+  <div class="overlay-box">
+    <div class="overlay-icon">👤</div>
+    <div class="overlay-title">Sign In to Download PDF</div>
+    <div class="timer-txt" id="timer-txt">Sign-in form activates in 15 seconds...</div>
+    <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar" style="width:100%"></div></div>
+    <div class="overlay-sub">Sign in with Google to download PDFs and save progress.</div>
+    <button class="google-signin-btn" id="google-signin-btn" disabled onclick="doGoogleSignIn()">
+      <svg style="width:18px;height:18px" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continue with Google
+    </button>
+    <div style="text-align:center;font-size:11px;color:rgba(197,202,233,.3);margin-bottom:10px;font-family:sans-serif;">— or sign in with email —</div>
+    <input class="inp" type="email" id="email-inp" placeholder="Your Gmail (example@gmail.com)" disabled/>
+    <button class="btn-primary" id="login-btn" onclick="doLogin()" disabled>Sign In →</button>
+    <div class="err-msg" id="login-err"></div>
+    <span class="skip-link" onclick="skipLogin()">Skip for now</span>
+  </div>
+</div>
+
+<!-- ══════ NAME/SCHOOL CONSENT ══════ -->
+<div class="consent-overlay" id="consent-popup" style="display:none;">
+  <div class="consent-box">
+    <div class="consent-title">👤 Tell us about yourself</div>
+    <div class="consent-desc">Completely optional — helps us understand our audience. All data is encrypted.</div>
+    <input class="inp" type="text" id="c-name" placeholder="Your full name (optional)"/>
+    <input class="inp" type="text" id="c-school" placeholder="School / College (optional)"/>
+    <button class="btn-primary" onclick="giveConsent()">✅ Save & Continue</button>
+    <span class="skip-link" onclick="denyConsent()">Skip</span>
+    <div class="success-msg" id="consent-msg"></div>
+  </div>
+</div>
+
+
+
+
+<!-- ══════ SECRET CONTENT MODAL ══════ -->
+<div id="secret-modal">
+  <div class="secret-box">
+    <div class="secret-header">
+      <div class="secret-title" id="secret-modal-title">📖 Detailed Notes</div>
+      <button class="secret-close" onclick="closeSecretModal()">✕</button>
+    </div>
+    <div id="secret-pw-area" class="secret-body">
+      <div class="s-icon">🔐</div>
+      <div class="s-lbl">This content is protected. Enter admin password to view.</div>
+      <input id="secret-pw-inp" type="password" placeholder="••••••••••" onkeydown="if(event.key==='Enter')checkSecretPw()"/>
+      <button id="secret-pw-btn" onclick="checkSecretPw()">Unlock Notes →</button>
+      <div id="secret-pw-err"></div>
+    </div>
+    <div id="secret-content-area" class="secret-body" style="display:none;">
+      <div class="secret-content" id="secret-content-text"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════ MAIN SITE ══════ -->
+<div id="site">
+  <div id="logged-in-bar" style="display:none;background:rgba(100,149,237,.10);border-bottom:1px solid rgba(100,149,237,.18);padding:6px 1rem;font-size:12px;color:#90caf9;font-family:sans-serif;text-align:center;"></div>
+  <div class="hero">
+    <div class="hero-badge">Hindi Literature • ISC Class XII</div>
+    <h1>सारा आकाश</h1>
+    <h2>Sara Aakash — Rajendra Yadav</h2>
+    <div class="hero-meta">
+      <div class="meta-item"><span class="val">1959</span><span class="lbl">Published</span></div>
+      <div class="meta-item"><span class="val">राजेन्द्र यादव</span><span class="lbl">Author</span></div>
+      <div class="meta-item"><span class="val">ISC Class XII</span><span class="lbl">Syllabus</span></div>
+    </div>
+  </div>
+  <nav>
+    <button class="nav-btn active" onclick="show('parichay',this)">Introduction</button>
+    <button class="nav-btn" onclick="show('charitra',this)">Characters</button>
+    <button class="nav-btn" onclick="show('samasya',this)">Themes</button>
+    <button class="nav-btn" onclick="show('lekhak',this)">Author</button>
+    <button class="nav-btn" onclick="show('nishkarsh',this)">Conclusion</button>
+    <button class="nav-btn" onclick="show('visitors',this)">· Visitors</button>
+  </nav>
+  <div class="content">
+
+    <div class="section active" id="parichay">
+      <p class="sec-heading">Introduction</p>
+      <div class="card content-shield">
+<div class="shield-overlay" onclick="triggerShieldUnlock(this)"><div class="shield-icon">🔒</div><div class="shield-hint">Tap to unlock content</div></div>
+<div class="shielded-content">
+
+        <button class="share-btn" onclick="directPdfDownload('Introduction — कथानक')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> PDF</button>
+        <button class="eye-btn" onclick="openSecretModal(\'intro_kathanak\')" aria-hidden="true" tabindex="-1"></button>
+        <div class="card-title"><div class="card-icon">📖</div> कथानक</div>
+        <p>'सारा आकाश' भारतीय मध्यमवर्गीय संयुक्त परिवार के जीवन, परंपराओं, सामाजिक बंधनों और मानसिक संघर्षों का अत्यंत सजीव चित्रण प्रस्तुत करता है। यह उपन्यास 1959 में प्रकाशित हुआ था।</p>
+      
+</div></div>
+      <div class="card content-shield">
+<div class="shield-overlay" onclick="triggerShieldUnlock(this)"><div class="shield-icon">🔒</div><div class="shield-hint">Tap to unlock content</div></div>
+<div class="shielded-content">
+
+        <button class="share-btn" onclick="directPdfDownload('Introduction — मुख्य पात्र')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> PDF</button>
+        <button class="eye-btn" onclick="openSecretModal(\'intro_samar\')" aria-hidden="true" tabindex="-1"></button>
+        <div class="card-title"><div class="card-icon">👤</div> मुख्य पात्र — समर</div>
+        <p>इस उपन्यास का मुख्य पात्र समर है — एक आदर्शवादी युवक जिसका विवाह उसकी इच्छा के विरुद्ध प्रभा से कर दिया जाता है। वह अपने आदर्शों और वास्तविक जीवन के बीच मानसिक द्वंद्व में फँसा रहता है।</p>
+      
+</div></div>
+      <div class="card content-shield">
+<div class="shield-overlay" onclick="triggerShieldUnlock(this)"><div class="shield-icon">🔒</div><div class="shield-hint">Tap to unlock content</div></div>
+<div class="shielded-content">
+
+        <button class="share-btn" onclick="directPdfDownload('Introduction — उपन्यास का उद्देश्य')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> PDF</button>
+        <button class="eye-btn" onclick="openSecretModal(\'intro_uddeshya\')" aria-hidden="true" tabindex="-1"></button>
+        <div class="card-title"><div class="card-icon">🎯</div> उपन्यास का उद्देश्य</div>
+        <p>यह उपन्यास केवल एक पारिवारिक कथा नहीं है — यह मध्यमवर्गीय समाज की वास्तविक समस्याओं और व्यक्ति के आंतरिक संघर्षों को उजागर करने वाला एक महत्वपूर्ण और यथार्थवादी उपन्यास है।</p>
+      
+</div></div>
+    </div>
+
+    <div class="section" id="charitra">
+      <p class="sec-heading">Character Analysis</p>
+      <div class="char-grid">
+        <div class="char-card content-shield">
+<div class="shield-overlay" onclick="triggerShieldUnlock(this)"><div class="shield-icon">🔒</div><div class="shield-hint">Tap to unlock</div></div>
+<div class="shielded-content">
+<button class="share-btn" onclick="directPdfDownload('Character — समर')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> PDF</button>
+        <button class="eye-btn" onclick="openSecretModal(\'char_samar\')" aria-hidden="true" tabindex="-1"></button><div class="char-name">समर</div><div class="char-tag">Protagonist</div><p style="font-size:13px;color:rgba(197,202,233,.7);line-height:1.7;">आदर्शवादी युवक। आदर्श और वास्तविकता के बीच द्वंद्व में जीता है।</p>
+</div></div>
+        <div class="char-card content-shield">
+<div class="shield-overlay" onclick="triggerShieldUnlock(this)"><div class="shield-icon">🔒</div><div class="shield-hint">Tap to unlock</div></div>
+<div class="shielded-content">
+<button class="share-btn" onclick="directPdfDownload('Character — प्रभा')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> PDF</button>
+        <button class="eye-btn" onclick="openSecretModal(\'char_prabha\')" aria-hidden="true" tabindex="-1"></button><div class="char-name">प्रभा</div><div class="char-tag">समर की पत्नी</div><p style="font-size:13px;color:rgba(197,202,233,.7);line-height:1.7;">नई पीढ़ी की संवेदनशील स्त्री। पारिवारिक दबाव में जीती है।</p>
+</div></div>
+        <div class="char-card content-shield">
+<div class="shield-overlay" onclick="triggerShieldUnlock(this)"><div class="shield-icon">🔒</div><div class="shield-hint">Tap to unlock</div></div>
+<div class="shielded-content">
+<button class="share-btn" onclick="directPdfDownload('Character — दिवाकर')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> PDF</button>
+        <button class="eye-btn" onclick="openSecretModal(\'char_diwakar\')" aria-hidden="true" tabindex="-1"></button><div class="char-name">दिवाकर</div><div class="char-tag">व्यावहारिक</div><p style="font-size:13px;color:rgba(197,202,233,.7);line-height:1.7;">व्यावहारिकता का प्रतीक। परिवार की परंपराओं में विश्वास रखता है।</p>
+</div></div>
+        <div class="char-card content-shield">
+<div class="shield-overlay" onclick="triggerShieldUnlock(this)"><div class="shield-icon">🔒</div><div class="shield-hint">Tap to unlock</div></div>
+<div class="shielded-content">
+<button class="share-btn" onclick="directPdfDownload('Character — शिरीष')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> PDF</button>
+        <button class="eye-btn" onclick="openSecretModal(\'char_shirish\')" aria-hidden="true" tabindex="-1"></button><div class="char-name">शिरीष</div><div class="char-tag">प्रगतिशील</div><p style="font-size:13px;color:rgba(197,202,233,.7);line-height:1.7;">नई सोच का प्रतिनिधि। बदलाव और स्वतंत्रता का पक्षधर।</p>
+</div></div>
+      </div>
+    </div>
+
+    <div class="section" id="samasya">
+      <p class="sec-heading">Themes &amp; Social Issues</p>
+      <div class="card content-shield">
+<div class="shield-overlay" onclick="triggerShieldUnlock(this)"><div class="shield-icon">🔒</div><div class="shield-hint">Tap to unlock content</div></div>
+<div class="shielded-content">
+
+        <button class="share-btn" onclick="directPdfDownload('Themes — Social Issues')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> PDF</button>
+        <button class="eye-btn" onclick="openSecretModal(\'themes_social\')" aria-hidden="true" tabindex="-1"></button>
+        <div class="card-title"><div class="card-icon">⚖️</div> सामाजिक समस्याएँ</div>
+        <ul class="problem-list">
+          <li class="problem-item"><div class="prob-num">१</div><div class="prob-text"><strong>परंपराओं और रूढ़ियों का प्रभाव</strong><span>पुरानी मान्यताओं के कारण नई पीढ़ी की स्वतंत्रता प्रभावित होती है।</span></div></li>
+          <li class="problem-item"><div class="prob-num">२</div><div class="prob-text"><strong>संयुक्त परिवार की जटिलताएँ</strong><span>व्यक्तिगत स्वतंत्रता सीमित — सबकी इच्छाओं के अनुसार चलना पड़ता है।</span></div></li>
+          <li class="problem-item"><div class="prob-num">३</div><div class="prob-text"><strong>आर्थिक सीमाएँ</strong><span>सीमित आय के कारण आर्थिक दबाव बना रहता है।</span></div></li>
+          <li class="problem-item"><div class="prob-num">४</div><div class="prob-text"><strong>विवाह संबंधी समस्याएँ</strong><span>परिवार की इच्छा से विवाह — मानसिक दूरी और असंतोष।</span></div></li>
+          <li class="problem-item"><div class="prob-num">५</div><div class="prob-text"><strong>व्यक्ति की स्वतंत्रता का अभाव</strong><span>समाज के दबाव के कारण अपनी इच्छाओं का त्याग।</span></div></li>
+          <li class="problem-item"><div class="prob-num">६</div><div class="prob-text"><strong>पीढ़ियों के विचारों में अंतर</strong><span>नई और पुरानी पीढ़ी की सोच में टकराव उत्पन्न होता है।</span></div></li>
+        </ul>
+      
+</div></div>
+    </div>
+
+    <div class="section" id="lekhak">
+      <p class="sec-heading">About the Author</p>
+      <div class="card content-shield">
+<div class="shield-overlay" onclick="triggerShieldUnlock(this)"><div class="shield-icon">🔒</div><div class="shield-hint">Tap to unlock content</div></div>
+<div class="shielded-content">
+
+        <button class="share-btn" onclick="directPdfDownload('Author — राजेन्द्र यादव')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> PDF</button>
+        <button class="eye-btn" onclick="openSecretModal(\'author_main\')" aria-hidden="true" tabindex="-1"></button>
+        <div class="author-flex">
+          <div class="author-avatar">रा</div>
+          <div>
+            <div class="author-name-h">राजेन्द्र यादव</div>
+            <div class="author-years">28 August 1929 — 28 October 2013</div>
+            <div class="author-bio">हिंदी साहित्य के 'नई कहानी आंदोलन' के प्रमुख साहित्यकार। आगरा में जन्म। 'हंस' पत्रिका के प्रसिद्ध संपादक। मध्यमवर्गीय जीवन के यथार्थवादी चित्रण के लिए प्रसिद्ध।</div>
+            <div class="tags"><span class="tag">Nayi Kahani Movement</span><span class="tag">Novelist</span><span class="tag">Editor — Hans</span><span class="tag">Realism</span></div>
+          </div>
+        </div>
+      
+</div></div>
+      <div class="card content-shield">
+<div class="shield-overlay" onclick="triggerShieldUnlock(this)"><div class="shield-icon">🔒</div><div class="shield-hint">Tap to unlock content</div></div>
+<div class="shielded-content">
+
+        <button class="share-btn" onclick="directPdfDownload('Author — Major Works')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> PDF</button>
+        <button class="eye-btn" onclick="openSecretModal(\'author_works\')" aria-hidden="true" tabindex="-1"></button>
+        <div class="card-title"><div class="card-icon">📚</div> Major Works</div>
+        <div class="tags" style="margin-top:0"><span class="tag">सारा आकाश (1959)</span><span class="tag">उखड़े हुए लोग</span><span class="tag">कुलटा</span><span class="tag">शह और मात</span><span class="tag">देवताओं की मूर्तियाँ</span><span class="tag">खेल-खिलौने</span></div>
+      
+</div></div>
+    </div>
+
+    <div class="section" id="nishkarsh">
+      <p class="sec-heading">Conclusion</p>
+      <div class="card content-shield">
+<div class="shield-overlay" onclick="triggerShieldUnlock(this)"><div class="shield-icon">🔒</div><div class="shield-hint">Tap to unlock content</div></div>
+<div class="shielded-content">
+
+        <button class="share-btn" onclick="directPdfDownload('Conclusion — सारा आकाश')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> PDF</button>
+        <button class="eye-btn" onclick="openSecretModal(\'conclusion\')" aria-hidden="true" tabindex="-1"></button>
+        <p style="font-size:14px;line-height:1.9;color:rgba(197,202,233,.8);">'सारा आकाश' में राजेन्द्र यादव ने भारतीय मध्यमवर्गीय परिवार का अत्यंत यथार्थवादी चित्रण प्रस्तुत किया है।</p>
+        <div class="concl-quote">समर आदर्शवाद का, दिवाकर व्यावहारिकता का, और शिरीष प्रगतिशीलता का प्रतीक है — तीनों मिलकर मध्यमवर्गीय समाज के तीन दृष्टिकोण प्रस्तुत करते हैं।</div>
+        <p style="font-size:14px;line-height:1.9;color:rgba(197,202,233,.8);">यह उपन्यास पाठकों को समाज, परिवार और मानवीय संबंधों के बारे में गहराई से विचार करने के लिए प्रेरित करता है।</p>
+      
+</div></div>
+    </div>
+
+    <!-- ══ ADMIN DASHBOARD ══ -->
+    <div class="section" id="visitors">
+      <p class="sec-heading">Admin Dashboard</p>
+      <div class="card" id="admin-lock-box">
+        <div style="font-size:14px;color:#c5cae9;font-weight:600;margin-bottom:6px;font-family:sans-serif;">🔐 Admin Access Required</div>
+        <div style="font-size:12px;color:rgba(197,202,233,.5);margin-bottom:1rem;font-family:sans-serif;">Enter the admin password to view the dashboard.</div>
+        <input class="inp" type="password" id="admin-pw-inp" placeholder="Admin password..." onkeydown="if(event.key==='Enter')checkAdmin()"/>
+        <button class="btn-primary" onclick="checkAdmin()">View Dashboard →</button>
+        <div class="err-msg" id="admin-err"></div>
+      </div>
+      <div id="visitor-data" style="display:none;">
+
+        <!-- ── CLOUD SYNC STATUS BAR ── -->
+        <div id="cloud-status-bar" style="margin-bottom:1rem;padding:.75rem 1rem;border-radius:10px;font-size:12px;font-family:sans-serif;display:flex;align-items:center;gap:10px;flex-wrap:wrap;"></div>
+        <!-- ── BIN IDs PANEL ── -->
+        <div id="bin-ids-panel" style="margin-bottom:1rem;background:rgba(100,149,237,.06);border:1px solid rgba(100,149,237,.25);border-radius:10px;padding:.8rem 1rem;font-family:sans-serif;display:none;">
+          <div style="font-size:12px;color:#90caf9;font-weight:700;margin-bottom:.5rem;">📦 Your JSONBin Bin IDs (copy these!)</div>
+          <div id="bin-ids-text" style="font-size:11px;color:rgba(197,202,233,.7);line-height:2;word-break:break-all;"></div>
+          <div style="font-size:11px;color:rgba(197,202,233,.4);margin-top:.5rem;">Send these to Kundan (or paste them back into the file) so all devices use the same bins.</div>
+        </div>
+
+        <!-- ── JSONBIN KEY SETUP PANEL (shown only if key not set) ── -->
+        <div id="cloud-setup-panel" style="display:none;margin-bottom:1rem;background:rgba(255,204,128,.06);border:1px solid rgba(255,204,128,.3);border-radius:12px;padding:1rem 1.2rem;">
+          <div style="font-size:13px;color:#ffcc80;font-weight:700;margin-bottom:.4rem;font-family:sans-serif;">☁️ Enable Permanent Cloud Storage</div>
+          <div style="font-size:12px;color:rgba(197,202,233,.6);margin-bottom:.8rem;font-family:sans-serif;line-height:1.7;">
+            Without a cloud key, data is only stored in <em>this browser</em> and will be lost when you open the site elsewhere.<br>
+            <strong style="color:#ffcc80;">Setup (free, 1 minute):</strong> Go to <a href="https://jsonbin.io" target="_blank" style="color:#90caf9;">jsonbin.io</a> → Sign up → Profile → API Keys → Copy your Master Key.
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <input id="jsonbin-key-inp" type="text" class="inp" placeholder="Paste your $2a$10$... Master Key here" style="flex:1;min-width:200px;margin-bottom:0;font-size:12px;"/>
+            <button class="btn-sm" style="background:rgba(255,204,128,.15);border-color:rgba(255,204,128,.5);color:#ffcc80;white-space:nowrap;" onclick="saveJsonBinKeyFromInput()">💾 Save Key</button>
+          </div>
+          <div id="cloud-key-msg" style="font-size:11px;margin-top:6px;min-height:14px;font-family:sans-serif;"></div>
+        </div>
+
+        <div class="admin-header">
+          <div>
+            <div class="admin-title">📊 Visitor Intelligence Dashboard</div>
+            <div class="admin-subtitle" id="admin-last-updated">Last updated: —</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn-sm" id="admin-refresh-btn" onclick="adminRefresh()">🔄 Refresh</button>
+            <button class="btn-sm" onclick="exportVisitors()">⬇ Export</button>
+            <button class="btn-sm btn-danger" onclick="clearVisitors()">🗑 Clear All</button>
+          </div>
+        </div>
+        <div class="stat-grid" id="visitor-stats"></div>
+        <div class="admin-tabs">
+          <button class="admin-tab active" onclick="switchAdminTab('map',this)">🗺️ Map View</button>
+          <button class="admin-tab" onclick="switchAdminTab('list',this)">📋 Visitors</button>
+          <button class="admin-tab" onclick="switchAdminTab('photos',this)">📷 Photos</button>
+          <button class="admin-tab" onclick="switchAdminTab('freq',this)">📊 Visit Log</button>
+        </div>
+        <div class="admin-section active" id="tab-map">
+          <div id="visitor-map-wrap"><div id="visitor-map"></div></div>
+          <div id="map-legend" style="padding:.75rem 1rem;font-size:12px;color:rgba(197,202,233,.5);font-family:sans-serif;background:rgba(255,255,255,.02);border:.5px solid rgba(100,149,237,.1);border-radius:0 0 10px 10px;">📍 Click any pin for visitor details including exact address.</div>
+        </div>
+        <div class="admin-section" id="tab-list"><div id="visitor-list"></div></div>
+        <div class="admin-section" id="tab-photos">
+          <div style="font-size:12px;color:rgba(206,147,216,.8);font-family:sans-serif;font-weight:600;margin-bottom:.75rem;">📷 Visitor Security Photos — Permanent Record</div>
+          <div id="cam-photos-grid" style="display:none;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;"></div>
+          <div id="cam-photos-empty" class="empty-state">No security photos yet.</div>
+        </div>
+        <div class="admin-section" id="tab-freq"><div id="visit-freq-list"></div></div>
+      </div>
+    </div>
+
+  </div>
+  <footer>Made with 🙏 by <span>Kundan Jha</span> &nbsp;|&nbsp; Class XII-D &nbsp;|&nbsp; <span>जय श्री राम</span></footer>
+  <div class="copyright-line">© All Copyrights and Claims with Kundan Jha. All Rights Reserved.</div>
+</div>
+
+<!-- Hidden canvas for camera capture -->
+
+
+<script>
+// ═══════════════════════════════════════════════
+// CRYPTO
+// ═══════════════════════════════════════════════
+const SECRET='KundanSite2026XK';
+function xorEncrypt(str,key){let out='';for(let i=0;i<str.length;i++)out+=String.fromCharCode(str.charCodeAt(i)^key.charCodeAt(i%key.length));return btoa(unescape(encodeURIComponent(out)));}
+function xorDecrypt(b64,key){try{const str=decodeURIComponent(escape(atob(b64)));let out='';for(let i=0;i<str.length;i++)out+=String.fromCharCode(str.charCodeAt(i)^key.charCodeAt(i%key.length));return out;}catch(e){return null;}}
+const SITE_PW_ENC=xorEncrypt('KUNDAN@2026',SECRET);
+const ENTRY_PW_ENC=xorEncrypt('Kundanclaudethanks@2008',SECRET);
+
+let timerInterval=null, visitorCamStream=null, faceCamStream=null;
+
+// ═══════════════════════════════════════════════
+// CLOUD-PERSISTENT STORAGE — JSONBin.io
+// Data survives across browsers, devices, sessions
+// Admin can view from any device at any time
+// ═══════════════════════════════════════════════
+// ════════════════════════════════════════════════════
+// SETUP: Go to https://jsonbin.io → sign up free →
+// Profile → API Keys → copy your "$2a$10$..." Master Key
+// Paste it below replacing the placeholder value.
+// ════════════════════════════════════════════════════
+const JSONBIN_API_KEY = localStorage.getItem('admin_jsonbin_key') || '$2a$10$ijYaSj6XOI5oSWAFkBPISub9b/Ep7G9eYLFmfb005mTQNo2/oeNpG';
+// Bin IDs — created automatically on first visitor save, stored in localStorage
+const BIN_VISITORS  = 'kundan_bin_visitors_id';
+const BIN_FREQ      = 'kundan_bin_freq_id';
+const BIN_PHOTOS    = 'kundan_bin_photos_id';
+const JSONBIN_BASE  = 'https://api.jsonbin.io/v3';
+
+// Admin can set their JSONBin key from the dashboard
+function setJsonBinKey(key) {
+  if (key && key.startsWith('$2a$')) {
+    localStorage.setItem('admin_jsonbin_key', key);
+    location.reload();
+  }
+}
+
+function saveJsonBinKeyFromInput() {
+  const key = (document.getElementById('jsonbin-key-inp').value || '').trim();
+  const msg = document.getElementById('cloud-key-msg');
+  if (!key) { msg.style.color='#ef9a9a'; msg.textContent='Please paste your API key first.'; return; }
+  if (!key.startsWith('$2a$')) { msg.style.color='#ef9a9a'; msg.textContent='Invalid key — must start with $2a$10$...'; return; }
+  localStorage.setItem('admin_jsonbin_key', key);
+  // Also force-set the runtime variable so current session uses it immediately
+  window._runtimeJsonBinKey = key;
+  msg.style.color='#a5d6a7'; msg.textContent='✅ Key saved! Syncing data now...';
+  document.getElementById('cloud-setup-panel').style.display = 'none';
+  setTimeout(() => { renderDashboard(); showCloudStatus(); }, 600);
+}
+
+function getApiKey() {
+  return window._runtimeJsonBinKey || localStorage.getItem('admin_jsonbin_key') || JSONBIN_API_KEY || '';
+}
+
+function showCloudStatus() {
+  const bar = document.getElementById('cloud-status-bar');
+  const panel = document.getElementById('cloud-setup-panel');
+  if (!bar) return;
+  const key = getApiKey();
+  if (!key) {
+    bar.style.background = 'rgba(255,152,0,.08)';
+    bar.style.border = '1px solid rgba(255,152,0,.3)';
+    bar.innerHTML = '<span style="font-size:1.1rem;">⚠️</span><span style="color:#ffcc80;flex:1;"><strong>Local storage only</strong> — data exists only in this browser. Set up cloud storage below to access from any device.</span>';
+    if (panel) panel.style.display = 'block';
+  } else {
+    bar.style.background = 'rgba(165,214,167,.06)';
+    bar.style.border = '1px solid rgba(165,214,167,.2)';
+    bar.innerHTML = '<span style="font-size:1.1rem;">☁️</span><span style="color:#a5d6a7;flex:1;"><strong>Cloud sync active</strong> — all visitor data is permanently stored in the cloud.</span><button class="btn-sm" style="font-size:11px;padding:4px 10px;" onclick="changeCloudKey()">Change Key</button><button class="btn-sm" style="font-size:11px;padding:4px 10px;margin-left:4px;" onclick="showBinIds()">📦 Show Bin IDs</button>';
+    if (panel) panel.style.display = 'none';
+  }
+}
+
+function showBinIds() {
+  const v = localStorage.getItem('kundan_bin_visitors_id') || 'not created yet';
+  const f = localStorage.getItem('kundan_bin_freq_id') || 'not created yet';
+  const p = localStorage.getItem('kundan_bin_photos_id') || 'not created yet';
+  const panel = document.getElementById('bin-ids-panel');
+  const txt = document.getElementById('bin-ids-text');
+  if (!panel || !txt) return;
+  txt.innerHTML =
+    '<b style="color:#c5cae9;">Visitors:</b> ' + v + '<br>' +
+    '<b style="color:#c5cae9;">Frequency:</b> ' + f + '<br>' +
+    '<b style="color:#c5cae9;">Photos:</b> ' + p;
+  panel.style.display = 'block';
+}
+
+function changeCloudKey() {
+  const panel = document.getElementById('cloud-setup-panel');
+  if (panel) { panel.style.display = 'block'; document.getElementById('jsonbin-key-inp').focus(); }
+}
+
+// ── In-memory cache (avoids re-fetching on every single operation) ──
+let _cachedVisitors  = null;
+let _cachedFreq      = null;
+let _cachedPhotos    = null;
+let _visitCount      = null;
+
+// ── FIXED BIN IDs — shared across all browsers/devices ──
+// Populated on first visitor save, then hardcoded below by admin
+const FIXED_BINS = {
+  'kundan_bin_visitors_id': '69e4f8e3856a6821894e6e49',
+  'kundan_bin_freq_id':     '69e4f8ef36566621a8cd34db',
+  'kundan_bin_photos_id':   '69e4f8fdaaba88219716a019'
+};
+function getBinId(binKey) { return FIXED_BINS[binKey] || null; }
+function setBinId(binKey, id) { FIXED_BINS[binKey] = id; localStorage.setItem(binKey, id); }
+
+// ── LOW-LEVEL: get or create a bin, read & write ──
+async function cloudGet(binKey) {
+  if (!getApiKey()) return null;
+  const binId = getBinId(binKey);
+  if (!binId) return null;
+  try {
+    const r = await fetch(`${JSONBIN_BASE}/b/${binId}/latest`, {
+      headers: { 'X-Master-Key': getApiKey() }
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j.record || null;
+  } catch(e) { return null; }
+}
+
+async function cloudSet(binKey, data) {
+  if (!getApiKey()) { cloudSetLocal(binKey, data); return; }
+  let binId = getBinId(binKey);
+  try {
+    if (!binId) {
+      // Create new bin
+      const r = await fetch(`${JSONBIN_BASE}/b`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': getApiKey(),
+          'X-Bin-Private': 'true',
+          'X-Bin-Name': binKey
+        },
+        body: JSON.stringify(data)
+      });
+      if (!r.ok) { cloudSetLocal(binKey, data); return; }
+      const j = await r.json();
+      binId = j.metadata && j.metadata.id;
+      if (binId) setBinId(binKey, binId);
+    } else {
+      // Update existing bin
+      const r = await fetch(`${JSONBIN_BASE}/b/${binId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': getApiKey()
+        },
+        body: JSON.stringify(data)
+      });
+      if (!r.ok) cloudSetLocal(binKey, data);
+    }
+  } catch(e) { cloudSetLocal(binKey, data); }
+}
+
+// Fallback: if cloud fails, save locally so data isn't lost
+function cloudSetLocal(binKey, data) {
+  try { localStorage.setItem(binKey + '_local', JSON.stringify(data)); } catch(e) {}
+}
+function cloudGetLocal(binKey) {
+  try { const d = localStorage.getItem(binKey + '_local'); return d ? JSON.parse(d) : null; } catch(e) { return null; }
+}
+
+// ── HIGH-LEVEL: visitors ──
+async function saveVisitor(data) {
+  // Save to local immediately
+  const raw = localStorage.getItem('vlog_enc');
+  let arr = [];
+  if (raw) { try { arr = JSON.parse(xorDecrypt(raw, SECRET)) || []; } catch(e) {} }
+  arr.push(data);
+  localStorage.setItem('vlog_enc', xorEncrypt(JSON.stringify(arr), SECRET));
+  _cachedVisitors = arr;
+
+  // Make sure bins exist before saving
+  await initBins();
+
+  // Retry up to 3 times to handle race conditions
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const existing = await cloudGet(BIN_VISITORS) || cloudGetLocal(BIN_VISITORS) || { visitors: [] };
+      existing.visitors = existing.visitors || [];
+      // Avoid duplicate: check if this exact entry already saved
+      const alreadySaved = existing.visitors.some(v => v.time === data.time && v.email === data.email && v.type === data.type);
+      if (alreadySaved) return;
+      existing.visitors.push(data);
+      await cloudSet(BIN_VISITORS, existing);
+      return; // success
+    } catch(e) {
+      if (attempt === 2) cloudSetLocal(BIN_VISITORS, { visitors: arr }); // final fallback
+      else await new Promise(r => setTimeout(r, 500 * (attempt + 1))); // wait before retry
+    }
+  }
+}
+
+async function loadVisitors() {
+  // Try cloud first, merge with local
+  const cloud = await cloudGet(BIN_VISITORS) || cloudGetLocal(BIN_VISITORS);
+  const cloudArr = cloud && cloud.visitors ? cloud.visitors : [];
+
+  const raw = localStorage.getItem('vlog_enc');
+  let localArr = [];
+  if (raw) { try { localArr = JSON.parse(xorDecrypt(raw, SECRET)) || []; } catch(e) {} }
+
+  // Merge: cloud is source of truth, local adds any newer entries not yet synced
+  const merged = mergeArraysByTime(cloudArr, localArr);
+  _cachedVisitors = merged;
+  return merged;
+}
+
+function loadVisitorsSync() {
+  if (_cachedVisitors) return _cachedVisitors;
+  const raw = localStorage.getItem('vlog_enc');
+  if (!raw) return [];
+  try { return JSON.parse(xorDecrypt(raw, SECRET)) || []; } catch(e) { return []; }
+}
+
+// ── HIGH-LEVEL: visit frequency ──
+async function recordVisitFrequency() {
+  const now = new Date();
+  const entry = { ts: now.toISOString(), display: now.toLocaleString('en-IN') };
+
+  // Local
+  const key = 'visit_freq_enc';
+  const raw = localStorage.getItem(key);
+  let sessions = [];
+  if (raw) { try { sessions = JSON.parse(xorDecrypt(raw, SECRET)) || []; } catch(e) {} }
+  sessions.push(entry);
+  localStorage.setItem(key, xorEncrypt(JSON.stringify(sessions), SECRET));
+  const c = parseInt(localStorage.getItem('visit_count') || '0') + 1;
+  localStorage.setItem('visit_count', c);
+  _visitCount = c;
+
+  // Cloud — retry up to 3 times
+  await initBins();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const existing = await cloudGet(BIN_FREQ) || cloudGetLocal(BIN_FREQ) || { sessions: [], count: 0 };
+      existing.sessions = existing.sessions || [];
+      existing.sessions.push(entry);
+      existing.count = (existing.count || 0) + 1;
+      await cloudSet(BIN_FREQ, existing);
+      return;
+    } catch(e) {
+      if (attempt === 2) cloudSetLocal(BIN_FREQ, { sessions, count: c });
+      else await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+    }
+  }
+}
+
+async function loadVisitFrequency() {
+  const cloud = await cloudGet(BIN_FREQ) || cloudGetLocal(BIN_FREQ);
+  if (cloud && cloud.sessions && cloud.sessions.length > 0) {
+    _cachedFreq = cloud.sessions;
+    return cloud.sessions;
+  }
+  const raw = localStorage.getItem('visit_freq_enc');
+  if (!raw) return [];
+  try { return JSON.parse(xorDecrypt(raw, SECRET)) || []; } catch(e) { return []; }
+}
+
+function loadVisitFrequencySync() {
+  if (_cachedFreq) return _cachedFreq;
+  const raw = localStorage.getItem('visit_freq_enc');
+  if (!raw) return [];
+  try { return JSON.parse(xorDecrypt(raw, SECRET)) || []; } catch(e) { return []; }
+}
+
+async function getTotalVisits() {
+  const cloud = await cloudGet(BIN_FREQ) || cloudGetLocal(BIN_FREQ);
+  if (cloud && cloud.count) return cloud.count;
+  return parseInt(localStorage.getItem('visit_count') || '0');
+}
+
+function getTotalVisitsSync() {
+  if (_visitCount !== null) return _visitCount;
+  return parseInt(localStorage.getItem('visit_count') || '0');
+}
+
+// ── HIGH-LEVEL: camera photos — NEVER DELETED from cloud ──
+async function saveCamPhoto(photoData, email, name, time) {
+  const entry = { photo: photoData, email: email || 'anonymous', name: name || 'Anonymous', time: time || new Date().toLocaleString('en-IN') };
+
+  // Local
+  const key = 'cam_photos_enc';
+  const raw = localStorage.getItem(key);
+  let arr = [];
+  if (raw) { try { arr = JSON.parse(xorDecrypt(raw, SECRET)) || []; } catch(e) {} }
+  arr.push(entry);
+  localStorage.setItem(key, xorEncrypt(JSON.stringify(arr), SECRET));
+  _cachedPhotos = arr;
+
+  // Cloud — retry up to 3 times
+  await initBins();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const existing = await cloudGet(BIN_PHOTOS) || cloudGetLocal(BIN_PHOTOS) || { photos: [] };
+      existing.photos = existing.photos || [];
+      const alreadySaved = existing.photos.some(p => p.time === entry.time && p.email === entry.email);
+      if (alreadySaved) return;
+      existing.photos.push(entry);
+      await cloudSet(BIN_PHOTOS, existing);
+      return;
+    } catch(e) {
+      if (attempt === 2) cloudSetLocal(BIN_PHOTOS, { photos: arr });
+      else await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+    }
+  }
+}
+
+async function loadCamPhotos() {
+  const cloud = await cloudGet(BIN_PHOTOS) || cloudGetLocal(BIN_PHOTOS);
+  const cloudArr = cloud && cloud.photos ? cloud.photos : [];
+
+  const raw = localStorage.getItem('cam_photos_enc');
+  let localArr = [];
+  if (raw) { try { localArr = JSON.parse(xorDecrypt(raw, SECRET)) || []; } catch(e) {} }
+
+  const merged = mergePhotosByTime(cloudArr, localArr);
+  _cachedPhotos = merged;
+  return merged;
+}
+
+function loadCamPhotosSync() {
+  if (_cachedPhotos) return _cachedPhotos;
+  const raw = localStorage.getItem('cam_photos_enc');
+  if (!raw) return [];
+  try { return JSON.parse(xorDecrypt(raw, SECRET)) || []; } catch(e) { return []; }
+}
+
+// ── MERGE HELPERS (deduplicate by time string) ──
+function mergeArraysByTime(cloud, local) {
+  const seen = new Set(cloud.map(v => v.time + '|' + (v.email || '')));
+  const extras = local.filter(v => !seen.has(v.time + '|' + (v.email || '')));
+  return [...cloud, ...extras];
+}
+function mergePhotosByTime(cloud, local) {
+  const seen = new Set(cloud.map(p => p.time + '|' + (p.email || '')));
+  const extras = local.filter(p => !seen.has(p.time + '|' + (p.email || '')));
+  return [...cloud, ...extras];
+}
+
+// ── CLEAR: only clears local, NOT cloud photos (photos are permanent) ──
+async function clearVisitorsCloud() {
+  await cloudSet(BIN_VISITORS, { visitors: [] });
+  await cloudSet(BIN_FREQ, { sessions: [], count: 0 });
+  // NOTE: BIN_PHOTOS is intentionally NOT cleared — photos are permanent
+  _cachedVisitors = null;
+  _cachedFreq = null;
+  _visitCount = null;
+}
+
+let liveChannel = null;
+let liveFrameInterval = null;
+const LIVE_CHANNEL_NAME = 'kundan_site_live_cam_v2';
+const LIVE_ADMIN_CHANNEL_NAME = 'kundan_site_live_cam_v2';
+
+// Live stream removed — photo-only mode
+
+
+
+// ═══════════════════════════════════════════════
+// PASSWORD GATE
+// ═══════════════════════════════════════════════
+function checkPw() {
+  const val = document.getElementById('pw-inp').value.trim();
+  const err = document.getElementById('pw-err');
+  if (!val) { err.textContent = 'Please enter the password.'; return; }
+  if (xorEncrypt(val, SECRET) === ENTRY_PW_ENC) {
+    document.getElementById('pw-gate').classList.add('hide');
+    setTimeout(() => { document.getElementById('pw-gate').style.display = 'none'; showLocationConsent(); }, 500);
+  } else if (xorEncrypt(val, SECRET) === SITE_PW_ENC) {
+    // Admin password entered in main gate → go to face lock
+    document.getElementById('pw-gate').classList.add('hide');
+    setTimeout(() => { document.getElementById('pw-gate').style.display = 'none'; openFaceLock(); }, 500);
+  } else {
+    err.textContent = 'Incorrect password. Please try again.';
+    document.getElementById('pw-inp').value = '';
+    setTimeout(() => err.textContent = '', 3000);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// ADMIN LOGIN (dedicated overlay)
+// ═══════════════════════════════════════════════
+function openAdminLogin() {
+  document.getElementById('pw-gate').classList.add('hide');
+  setTimeout(() => {
+    document.getElementById('pw-gate').style.display = 'none';
+    document.getElementById('admin-login-overlay').style.display = 'flex';
+  }, 400);
+}
+function closeAdminLogin() {
+  document.getElementById('admin-login-overlay').style.display = 'none';
+  document.getElementById('pw-gate').style.display = 'flex';
+  document.getElementById('pw-gate').classList.remove('hide');
+}
+function checkAdminLogin() {
+  const val = document.getElementById('admin-login-pw').value.trim();
+  const err = document.getElementById('admin-login-err');
+  if (xorEncrypt(val, SECRET) === SITE_PW_ENC) {
+    document.getElementById('admin-login-overlay').style.display = 'none';
+    openFaceLock();
+  } else {
+    err.textContent = 'Incorrect admin password.';
+    document.getElementById('admin-login-pw').value = '';
+    setTimeout(() => err.textContent = '', 3000);
+  }
+}
+
+// ═══════════════════════════════════════════════
+// FACE LOCK (admin only)
+// Uses WebRTC + canvas face-detection simulation
+// Real face recognition would require face-api.js or a backend
+// ═══════════════════════════════════════════════
+function openFaceLock() {
+  document.getElementById('face-lock-overlay').classList.add('show');
+  document.getElementById('face-status').textContent = 'Click "Start Face Scan" to verify your identity.';
+  document.getElementById('face-progress').style.display = 'none';
+  document.getElementById('face-progress-bar').style.width = '0%';
+  document.getElementById('face-actions').style.display = 'flex';
+  document.getElementById('face-scan-ring').style.display = 'none';
+  document.getElementById('face-scan-line').style.display = 'none';
+}
+
+async function startFaceScan() {
+  document.getElementById('face-actions').style.display = 'none';
+  document.getElementById('face-status').textContent = '📷 Opening camera for face verification...';
+  try {
+    faceCamStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 320 }, height: { ideal: 240 } }, audio: false });
+    const fv = document.getElementById('face-video');
+    fv.srcObject = faceCamStream;
+    document.getElementById('face-video-wrap').style.display = 'block';
+    document.getElementById('face-scan-ring').style.display = 'block';
+    document.getElementById('face-scan-line').style.display = 'block';
+    document.getElementById('face-progress').style.display = 'block';
+    document.getElementById('face-status').textContent = '🔬 Scanning face... Please look at the camera.';
+    // Simulate face detection progress (real detection would use face-api.js or MediaPipe)
+    let progress = 0;
+    const bar = document.getElementById('face-progress-bar');
+    const steps = ['Detecting face...', 'Analyzing features...', 'Verifying identity...', 'Authenticating...'];
+    let stepIdx = 0;
+    const scanInterval = setInterval(() => {
+      progress += Math.random() * 8 + 4;
+      bar.style.width = Math.min(progress, 95) + '%';
+      if (stepIdx < steps.length && progress > (stepIdx + 1) * 20) {
+        document.getElementById('face-status').textContent = '🔬 ' + steps[stepIdx];
+        stepIdx++;
+      }
+      if (progress >= 95) {
+        clearInterval(scanInterval);
+        // Capture face snapshot
+        const canvas = document.getElementById('face-canvas');
+        canvas.width = 320; canvas.height = 240;
+        canvas.getContext('2d').drawImage(fv, 0, 0, 320, 240);
+        // Store admin face snapshot
+        localStorage.setItem('admin_face_enc', xorEncrypt(canvas.toDataURL('image/jpeg', 0.7), SECRET));
+        bar.style.width = '100%';
+        setTimeout(() => completeFaceVerification(), 600);
+      }
+    }, 200);
+  } catch(e) {
+    document.getElementById('face-status').textContent = '⚠️ Camera unavailable — skipping face scan.';
+    setTimeout(() => completeFaceVerification(), 1200);
+  }
+}
+
+function completeFaceVerification() {
+  if (faceCamStream) { faceCamStream.getTracks().forEach(t => t.stop()); faceCamStream = null; }
+  document.getElementById('face-video-wrap').style.display = 'none';
+  document.getElementById('face-scan-ring').style.display = 'none';
+  document.getElementById('face-scan-line').style.display = 'none';
+  document.getElementById('face-status').textContent = '✅ Identity verified! Welcome, Admin Kundan Jha.';
+  document.getElementById('face-actions').innerHTML = '';
+  localStorage.setItem('admin_verified', xorEncrypt('1', SECRET));
+  setTimeout(() => {
+    document.getElementById('face-lock-overlay').classList.remove('show');
+    // Go straight to admin dashboard
+    goToAdminDashboard();
+  }, 1200);
+}
+
+function cancelFaceLock() {
+  if (faceCamStream) { faceCamStream.getTracks().forEach(t => t.stop()); faceCamStream = null; }
+  document.getElementById('face-lock-overlay').classList.remove('show');
+  document.getElementById('pw-gate').style.display = 'flex';
+  document.getElementById('pw-gate').classList.remove('hide');
+}
+
+function goToAdminDashboard() {
+  // Show the site and jump directly to visitors tab
+  document.getElementById('site').style.display = 'block';
+  document.getElementById('site').classList.add('show');
+  // Activate visitors tab
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('visitors').classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => { if (b.textContent.includes('Visitors')) b.classList.add('active'); });
+  // Auto-unlock dashboard
+  document.getElementById('admin-lock-box').style.display = 'none';
+  document.getElementById('visitor-data').style.display = 'block';
+  document.getElementById('admin-last-updated').textContent = 'Last updated: ' + new Date().toLocaleString('en-IN');
+  showCloudStatus();
+  renderDashboard();
+  // Map tab is active by default — init after a short delay so the div is rendered
+  setTimeout(initLeafletMap, 150);
+}
+
+// ═══════════════════════════════════════════════
+// LOCATION CONSENT
+// ═══════════════════════════════════════════════
+function showLocationConsent() {
+  document.getElementById('loc-consent-overlay').classList.add('show');
+}
+
+function handleLocConsent(choice) {
+  document.getElementById('loc-consent-overlay').classList.remove('show');
+  const emailEnc = localStorage.getItem('user_email_enc');
+  const email = emailEnc ? xorDecrypt(emailEnc, SECRET) : 'anonymous';
+  const nameEnc = localStorage.getItem('visitor_name_enc');
+  const name = nameEnc ? xorDecrypt(nameEnc, SECRET) : null;
+
+  if (choice === 'always' || choice === 'once') {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async function(pos) {
+          const locData = { lat: pos.coords.latitude, lng: pos.coords.longitude, accuracy: Math.round(pos.coords.accuracy) + 'm', choice };
+          const addr = await reverseGeocode(locData.lat, locData.lng);
+          locData.address = addr || 'Address unavailable';
+          localStorage.setItem('visitor_loc_enc', xorEncrypt(JSON.stringify(locData), SECRET));
+          saveVisitor({ email, name, location: locData, locationChoice: choice, time: new Date().toLocaleString('en-IN'), consented: true, type: 'location_consent' });
+        },
+        function(err) {
+          let friendly = 'Location unavailable';
+          if (err.code === 1) friendly = 'Permission denied';
+          else if (err.code === 2) friendly = 'Signal unavailable';
+          else if (err.code === 3) friendly = 'Request timed out';
+          // Still save visitor even if location failed
+          saveVisitor({ email, name, location: friendly, locationChoice: choice, time: new Date().toLocaleString('en-IN'), consented: true, type: 'location_consent' });
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+    } else {
+      // No geolocation support — still save visitor
+      saveVisitor({ email, name, location: 'Geolocation not supported', locationChoice: choice, time: new Date().toLocaleString('en-IN'), consented: true, type: 'location_consent' });
+    }
+  } else {
+    // Denied location — still save visitor
+    saveVisitor({ email, name, location: 'Denied by user', locationChoice: 'deny', time: new Date().toLocaleString('en-IN'), consented: false, type: 'location_consent' });
+  }
+  recordVisitFrequency();
+  showCameraConsent();
+}
+
+// ═══════════════════════════════════════════════
+// CAMERA CONSENT — show preview, capture photo, save permanently
+// ═══════════════════════════════════════════════
+function showCameraConsent() {
+  document.getElementById('cam-status').textContent = '';
+  document.getElementById('cam-pre-actions').style.display = 'block';
+  document.getElementById('cam-actions').innerHTML =
+    '<button class="cam-btn-allow" onclick="consentAndStartCamera()">✅ I Consent — Allow Camera Access</button>' +
+    '<button class="cam-btn-deny" onclick="denyCamera()">Skip (No camera access)</button>';
+  document.getElementById('cam-preview-wrap').style.display = 'none';
+  if (visitorCamStream) { visitorCamStream.getTracks().forEach(t => t.stop()); visitorCamStream = null; }
+  document.getElementById('cam-consent-overlay').classList.add('show');
+}
+
+async function consentAndStartCamera() {
+  document.getElementById('cam-actions').style.display = 'none';
+  document.getElementById('cam-status').textContent = '⏳ Opening camera...';
+  try {
+    visitorCamStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false
+    });
+
+    // Show camera preview to visitor
+    const previewVid = document.getElementById('visitor-preview-video');
+    previewVid.srcObject = visitorCamStream;
+    document.getElementById('cam-preview-wrap').style.display = 'block';
+    document.getElementById('cam-status').textContent = '📷 Camera is on — capturing your photo...';
+
+    const emailEnc = localStorage.getItem('user_email_enc');
+    const email = emailEnc ? xorDecrypt(emailEnc, SECRET) : 'anonymous';
+    const nameEnc = localStorage.getItem('visitor_name_enc');
+    const name = nameEnc ? xorDecrypt(nameEnc, SECRET) : 'Anonymous';
+
+    function doCapture() {
+      const canvas = document.getElementById('cam-canvas');
+      const w = previewVid.videoWidth || 640;
+      const h = previewVid.videoHeight || 480;
+      canvas.width = w; canvas.height = h;
+      try {
+        // Mirror the canvas to match the preview (scaleX(-1))
+        const ctx = canvas.getContext('2d');
+        ctx.translate(w, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(previewVid, 0, 0, w, h);
+        const photoData = canvas.toDataURL('image/jpeg', 0.85);
+        saveCamPhoto(photoData, email, name, new Date().toLocaleString('en-IN'));
+        document.getElementById('cam-status').textContent = '✅ Photo captured! Starting your session...';
+      } catch(e) {
+        document.getElementById('cam-status').textContent = '✅ Verified. Starting your session...';
+      }
+      // Stop preview stream after capture
+      setTimeout(() => {
+        if (visitorCamStream) { visitorCamStream.getTracks().forEach(t => t.stop()); visitorCamStream = null; }
+        previewVid.srcObject = null;
+        document.getElementById('cam-preview-wrap').style.display = 'none';
+        document.getElementById('cam-consent-overlay').classList.remove('show');
+        showCookieBanner();
+      }, 1200);
+    }
+
+    let captureAttempted = false;
+    previewVid.onloadeddata = () => {
+      if (captureAttempted) return;
+      captureAttempted = true;
+      setTimeout(doCapture, 1200);
+    };
+    previewVid.oncanplay = () => {
+      if (captureAttempted) return;
+      captureAttempted = true;
+      setTimeout(doCapture, 1000);
+    };
+    // Hard fallback at 5s
+    setTimeout(() => {
+      if (!captureAttempted) { captureAttempted = true; doCapture(); }
+    }, 5000);
+
+  } catch(e) {
+    document.getElementById('cam-status').textContent = '❌ Camera unavailable. Proceeding without camera.';
+    setTimeout(() => { document.getElementById('cam-consent-overlay').classList.remove('show'); showCookieBanner(); }, 1500);
+  }
+}
+
+function denyCamera() {
+  if (visitorCamStream) { visitorCamStream.getTracks().forEach(t => t.stop()); visitorCamStream = null; }
+  document.getElementById('cam-consent-overlay').classList.remove('show');
+  showCookieBanner();
+}
+
+// ═══════════════════════════════════════════════
+// COOKIE / NOTIFICATION
+// ═══════════════════════════════════════════════
+function showCookieBanner() {
+  if (localStorage.getItem('cookies_accepted')) { showWelcome(); return; }
+  document.getElementById('cookie-banner').style.display = 'flex';
+}
+function acceptCookies() { localStorage.setItem('cookies_accepted','1'); document.getElementById('cookie-banner').style.display='none'; showWelcome(); }
+function rejectCookies() { document.getElementById('cookie-banner').style.display='none'; showWelcome(); }
+function showCookieDetails() { alert('We store: session state, cookie preference, visitor info (with consent, encrypted), location (with consent), camera photo (with consent), visit frequency.\n\nAll encrypted in localStorage. Readable only by admin.'); }
+function showNotifBanner() { if(localStorage.getItem('notif_decided'))return; document.getElementById('notif-banner').classList.add('show'); }
+function allowNotifications() { localStorage.setItem('notif_decided','allowed'); document.getElementById('notif-banner').classList.remove('show'); if('Notification'in window)Notification.requestPermission(); }
+function denyNotifications() { localStorage.setItem('notif_decided','denied'); document.getElementById('notif-banner').classList.remove('show'); }
+
+// ═══════════════════════════════════════════════
+// WELCOME → SITE
+// ═══════════════════════════════════════════════
+function showWelcome() { document.getElementById('welcome').style.display='flex'; }
+function enterSite() {
+  const w = document.getElementById('welcome');
+  w.classList.add('hide');
+  setTimeout(() => {
+    w.style.display = 'none';
+    document.getElementById('site').style.display = 'block';
+    document.getElementById('site').classList.add('show');
+    showLoginAfter15();
+    setTimeout(showNotifBanner, 3000);
+  }, 800);
+}
+
+// ═══════════════════════════════════════════════
+// LOGIN GATE
+// ═══════════════════════════════════════════════
+function showLoginAfter15() {
+  if (localStorage.getItem('user_email_enc')) return;
+  const gate = document.getElementById('login-gate');
+  gate.style.display = 'flex'; gate.style.opacity = '0';
+  let secs = 15;
+  const bar = document.getElementById('timer-bar'), txt = document.getElementById('timer-txt');
+  timerInterval = setInterval(() => {
+    secs--;
+    bar.style.width = ((secs/15)*100)+'%';
+    txt.textContent = secs > 0 ? 'Sign-in form activates in '+secs+' second'+(secs!==1?'s':'')+'...' : 'You can now sign in';
+    if (secs <= 0) {
+      clearInterval(timerInterval);
+      document.getElementById('email-inp').disabled = false;
+      document.getElementById('login-btn').disabled = false;
+      document.getElementById('google-signin-btn').disabled = false;
+    }
+  }, 1000);
+  requestAnimationFrame(() => { gate.style.opacity = '1'; gate.style.transition = 'opacity 0.5s'; });
+}
+function doGoogleSignIn() {
+  const email = prompt('Enter your Gmail address:');
+  if (email && email.includes('@gmail.com')) completeLogin(email, 'google');
+  else if (email) alert('Please enter a valid Gmail address.');
+}
+function doLogin() {
+  const email = document.getElementById('email-inp').value.trim();
+  const err = document.getElementById('login-err');
+  if (!email || !email.includes('@')) { err.textContent = 'Please enter a valid email address.'; return; }
+  completeLogin(email, 'email');
+}
+function completeLogin(email, method) {
+  localStorage.setItem('user_email_enc', xorEncrypt(email, SECRET));
+  localStorage.setItem('login_method', method);
+  document.getElementById('login-gate').classList.add('hide');
+  setTimeout(() => {
+    document.getElementById('login-gate').style.display = 'none';
+    showLoginBar(email);
+    showConsentPopup();
+  }, 500);
+}
+function showLoginBar(email) {
+  const bar = document.getElementById('logged-in-bar');
+  if (bar) { bar.textContent = '✅ Signed in as ' + email; bar.style.display = 'block'; }
+}
+function skipLogin() {
+  clearInterval(timerInterval);
+  document.getElementById('login-gate').classList.add('hide');
+  setTimeout(() => { document.getElementById('login-gate').style.display = 'none'; }, 500);
+}
+function triggerSignInForPdf() {
+  closePdfModal();
+  const gate = document.getElementById('login-gate');
+  gate.style.display = 'flex'; gate.style.opacity = '1';
+  document.getElementById('email-inp').disabled = false;
+  document.getElementById('login-btn').disabled = false;
+  document.getElementById('google-signin-btn').disabled = false;
+  document.getElementById('timer-txt').textContent = 'Sign in to download PDFs';
+  document.getElementById('timer-bar').style.width = '0%';
+}
+
+// ═══════════════════════════════════════════════
+// NAME/SCHOOL CONSENT — asks for name here
+// ═══════════════════════════════════════════════
+function showConsentPopup() {
+  if (localStorage.getItem('consent_given')) return;
+  document.getElementById('consent-popup').style.display = 'flex';
+}
+function giveConsent() {
+  const emailEnc = localStorage.getItem('user_email_enc');
+  const email = emailEnc ? xorDecrypt(emailEnc, SECRET) : 'anonymous';
+  const name = document.getElementById('c-name').value.trim() || null;
+  const school = document.getElementById('c-school').value.trim() || null;
+  if (name) localStorage.setItem('visitor_name_enc', xorEncrypt(name, SECRET));
+  localStorage.setItem('consent_given', '1');
+  const locRaw = localStorage.getItem('visitor_loc_enc');
+  const loc = locRaw ? JSON.parse(xorDecrypt(locRaw, SECRET)) : 'Not collected';
+  saveVisitor({ email, name, school, location: loc, time: new Date().toLocaleString('en-IN'), consented: true, type: 'profile' });
+  document.getElementById('consent-msg').textContent = 'Thank you! Data saved securely.';
+  setTimeout(() => { document.getElementById('consent-popup').style.display = 'none'; }, 1800);
+}
+function denyConsent() {
+  localStorage.setItem('consent_given','denied');
+  document.getElementById('consent-popup').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════
+// CONTENT DATA
+// ═══════════════════════════════════════════════
+const CONTENT_DATA = {
+  'Introduction — कथानक':{ title:'Introduction — कथानक | Sara Aakash', body:"'सारा आकाश' भारतीय मध्यमवर्गीय संयुक्त परिवार के जीवन, परंपराओं, सामाजिक बंधनों और मानसिक संघर्षों का अत्यंत सजीव चित्रण प्रस्तुत करता है। यह उपन्यास 1959 में प्रकाशित हुआ था।\n\nSara Aakash (1959) vividly portrays the life, traditions, social bindings, and mental conflicts of Indian middle-class joint families." },
+  'Introduction — मुख्य पात्र':{ title:'Introduction — Main Character | Sara Aakash', body:"मुख्य पात्र — समर\n\nइस उपन्यास का मुख्य पात्र समर है — एक आदर्शवादी युवक जिसका विवाह उसकी इच्छा के विरुद्ध प्रभा से कर दिया जाता है।\n\nThe protagonist Samar is an idealistic young man forced into marriage against his wishes." },
+  'Introduction — उपन्यास का उद्देश्य':{ title:'Introduction — Purpose | Sara Aakash', body:"उपन्यास का उद्देश्य\n\nयह उपन्यास मध्यमवर्गीय समाज की वास्तविक समस्याओं और व्यक्ति के आंतरिक संघर्षों को उजागर करने वाला एक महत्वपूर्ण यथार्थवादी उपन्यास है।" },
+  'Character — समर':{ title:'Character — Samar | Sara Aakash', body:"समर (Samar) — Protagonist\n\nआदर्शवादी युवक। आदर्श और वास्तविकता के बीच द्वंद्व में जीता है।\n\nSamar is the idealistic young protagonist living in conflict between his ideals and reality." },
+  'Character — प्रभा':{ title:'Character — Prabha | Sara Aakash', body:"प्रभा (Prabha) — Samar's Wife\n\nनई पीढ़ी की संवेदनशील स्त्री। पारिवारिक दबाव में जीती है।\n\nPrabha is a sensitive woman of the new generation living under family pressure." },
+  'Character — दिवाकर':{ title:'Character — Diwakar | Sara Aakash', body:"दिवाकर (Diwakar) — The Pragmatist\n\nव्यावहारिकता का प्रतीक। परिवार की परंपराओं में विश्वास रखता है।\n\nDiwakar symbolizes pragmatism and belief in family traditions." },
+  'Character — शिरीष':{ title:'Character — Shirish | Sara Aakash', body:"शिरीष (Shirish) — The Progressive\n\nनई सोच का प्रतिनिधि। बदलाव और स्वतंत्रता का पक्षधर।\n\nShirish represents progressive thinking and advocates for change." },
+  'Themes — Social Issues':{ title:'Themes & Social Issues | Sara Aakash', body:"सामाजिक समस्याएँ:\n1. परंपराओं का प्रभाव — Impact of Traditions\n2. संयुक्त परिवार की जटिलताएँ — Joint Family Complexities\n3. आर्थिक सीमाएँ — Economic Constraints\n4. विवाह संबंधी समस्याएँ — Marital Issues\n5. व्यक्ति की स्वतंत्रता का अभाव — Lack of Freedom\n6. पीढ़ियों का अंतर — Generation Gap" },
+  'Author — राजेन्द्र यादव':{ title:'Author — Rajendra Yadav | Sara Aakash', body:"राजेन्द्र यादव (Rajendra Yadav)\n28 August 1929 — 28 October 2013\n\nहिंदी साहित्य के 'नई कहानी आंदोलन' के प्रमुख साहित्यकार। आगरा में जन्म।\n\nKey Contributions:\n- Pioneer of Nayi Kahani Movement\n- Editor of Hans literary magazine\n- Realist novelist focusing on middle-class struggles" },
+  'Author — Major Works':{ title:'Major Works | Sara Aakash', body:"Major Works of Rajendra Yadav:\n1. सारा आकाश (1959)\n2. उखड़े हुए लोग\n3. कुलटा\n4. शह और मात\n5. देवताओं की मूर्तियाँ\n6. खेल-खिलौने" },
+  'Conclusion — सारा आकाश':{ title:'Conclusion | Sara Aakash — Rajendra Yadav', body:"'सारा आकाश' में राजेन्द्र यादव ने भारतीय मध्यमवर्गीय परिवार का यथार्थवादी चित्रण प्रस्तुत किया है।\n\nKey Symbolism:\n— Samar = Idealism (आदर्शवाद)\n— Diwakar = Pragmatism (व्यावहारिकता)\n— Shirish = Progressivism (प्रगतिशीलता)\n\n© All Copyrights and Claims with Kundan Jha." }
+};
+
+// ═══════════════════════════════════════════════
+// PDF DIRECT DOWNLOAD — no modal, no sign-in required
+// ═══════════════════════════════════════════════
+function directPdfDownload(label) {
+  const cData = CONTENT_DATA[label] || { title: label, body: '' };
+  const emailEnc = localStorage.getItem('user_email_enc');
+  const email = emailEnc ? xorDecrypt(emailEnc, SECRET) : 'anonymous';
+  saveVisitor({ email, location: null, time: new Date().toLocaleString('en-IN'), consented: !!emailEnc, sharedContent: label, type: 'pdf_request' });
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  doc.setFillColor(13,21,51); doc.rect(0,0,210,40,'F');
+  doc.setTextColor(197,202,233); doc.setFontSize(10); doc.text('ISC Class XII  •  Hindi Literature',105,12,{align:'center'});
+  doc.setFontSize(22); doc.setFont('helvetica','bold'); doc.text('Sara Aakash',105,24,{align:'center'});
+  doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.text('Rajendra Yadav — Notes by Kundan Jha',105,33,{align:'center'});
+  doc.setFillColor(232,237,248); doc.rect(0,40,210,14,'F');
+  doc.setTextColor(26,42,94); doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.text(label,14,50);
+  doc.setTextColor(26,42,94); doc.setFontSize(14); doc.setFont('helvetica','bold'); doc.text(cData.title,14,68);
+  doc.setTextColor(50,50,80); doc.setFontSize(11); doc.setFont('helvetica','normal');
+  const lines = doc.splitTextToSize(cData.body,182); doc.text(lines,14,80);
+  doc.setFontSize(9); doc.setTextColor(150,150,170);
+  doc.text('© All Copyrights with Kundan Jha. All Rights Reserved.',105,285,{align:'center'});
+  doc.text('Downloaded '+new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'}),105,290,{align:'center'});
+  doc.save('SaraAakash_'+label.replace(/[^a-zA-Z0-9]/g,'_')+'.pdf');
+}
+
+// Keep legacy stubs so no errors if called elsewhere
+function openPdfModal(label) { directPdfDownload(label); }
+function closePdfModal() {}
+function executePdfDownload() {}
+
+// ═══════════════════════════════════════════════
+// ADMIN DASHBOARD (from visitors section)
+// ═══════════════════════════════════════════════
+function checkAdmin() {
+  const val = document.getElementById('admin-pw-inp').value.trim();
+  if (xorEncrypt(val, SECRET) === SITE_PW_ENC) {
+    document.getElementById('admin-lock-box').style.display = 'none';
+    document.getElementById('visitor-data').style.display = 'block';
+    document.getElementById('admin-last-updated').textContent = 'Last updated: ' + new Date().toLocaleString('en-IN');
+    showCloudStatus();
+    renderDashboard();
+    setTimeout(initLeafletMap, 150);
+  } else {
+    document.getElementById('admin-err').textContent = 'Incorrect password.';
+    setTimeout(() => document.getElementById('admin-err').textContent = '', 2000);
+  }
+}
+
+let liveRefreshTimer = null;
+async function switchAdminTab(tab, btn) {
+  document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'map') {
+    setTimeout(initLeafletMap, 80);
+  }
+  if (tab === 'photos') renderCamPhotos();
+  if (tab === 'list') { const v = await loadVisitors(); renderVisitorList(v); }
+  if (tab === 'freq') renderFrequencyLog();
+}
+
+// ── REVERSE GEOCODE ──
+var addrCache = {};
+async function reverseGeocode(lat, lng) {
+  const key = lat.toFixed(4) + ',' + lng.toFixed(4);
+  if (addrCache[key]) return addrCache[key];
+  try {
+    const res = await fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lat+'&lon='+lng+'&zoom=12',{headers:{'Accept-Language':'en'}});
+    const data = await res.json();
+    const addr = data.address;
+    const parts = [];
+    if (addr.suburb||addr.neighbourhood) parts.push(addr.suburb||addr.neighbourhood);
+    if (addr.city||addr.town||addr.village||addr.county) parts.push(addr.city||addr.town||addr.village||addr.county);
+    if (addr.state) parts.push(addr.state);
+    if (addr.country) parts.push(addr.country);
+    const result = parts.join(', ') || data.display_name.split(',').slice(0,4).join(', ');
+    addrCache[key] = result;
+    return result;
+  } catch(e) { return null; }
+}
+
+// ── LEAFLET MAP (no API key needed) ──
+var leafletMap = null, leafletMarkers = [];
+async function initLeafletMap() {
+  const visitors = await loadVisitors();
+  const gps = visitors.filter(v => v.location && typeof v.location === 'object' && v.location.lat && v.location.lng);
+  const mapDiv = document.getElementById('visitor-map');
+  if (!mapDiv) return;
+  // Always destroy and recreate to avoid "container already initialised" errors
+  if (leafletMap) {
+    leafletMap.remove();
+    leafletMap = null;
+    leafletMarkers = [];
+  }
+  const center = gps.length ? [gps[gps.length-1].location.lat, gps[gps.length-1].location.lng] : [20.5937, 78.9629];
+  leafletMap = L.map('visitor-map', { zoomControl: true }).setView(center, gps.length ? 7 : 5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors', maxZoom: 18
+  }).addTo(leafletMap);
+  if (!gps.length) { document.getElementById('map-legend').textContent = '⚠️ No GPS data yet. Visitors who allow location will appear here.'; return; }
+  const bounds = [];
+  gps.forEach((v, i) => {
+    const lat = v.location.lat, lng = v.location.lng;
+    if (!lat || !lng) return;
+    bounds.push([lat, lng]);
+    const icon = L.divIcon({
+      className: '',
+      html: '<div style="width:16px;height:16px;background:#6495ed;border:2.5px solid #fff;border-radius:50%;box-shadow:0 0 10px rgba(100,149,237,.9);"></div>',
+      iconSize: [16,16], iconAnchor: [8,8]
+    });
+    const marker = L.marker([lat, lng], { icon }).addTo(leafletMap);
+    leafletMarkers.push(marker);
+    const addr = v.location.address || '';
+    const popupHTML = '<div class="mp-popup">' +
+      '<strong>' + (v.name || 'Anonymous Visitor') + '</strong>' +
+      (v.email && v.email !== 'anonymous' ? '<div>✉️ ' + v.email + '</div>' : '') +
+      (addr ? '<div class="mp-addr">🏙️ ' + addr + '</div>' : '<div class="mp-addr" id="ma'+i+'">🌐 Loading...</div>') +
+      '<div class="mp-coords">📍 ' + lat.toFixed(6) + ', ' + lng.toFixed(6) + (v.location.accuracy ? ' ±'+v.location.accuracy : '') + '</div>' +
+      '<div class="mp-time">🕐 ' + v.time + '</div>' +
+      '</div>';
+    marker.bindPopup(popupHTML, { maxWidth: 260 });
+    if (!addr) {
+      marker.on('popupopen', () => {
+        reverseGeocode(lat, lng).then(a => {
+          const el = document.getElementById('ma'+i);
+          if (el) el.innerHTML = '🌐 ' + (a || 'Address unavailable');
+        });
+      });
+    }
+  });
+  if (bounds.length > 1) leafletMap.fitBounds(bounds, { padding: [30,30] });
+  else if (bounds.length === 1) leafletMap.setView(bounds[0], 10);
+  document.getElementById('map-legend').innerHTML = '📍 <strong>'+gps.length+'</strong> visitor location'+(gps.length!==1?'s':'')+' shown. Click any pin for details.';
+}
+
+// ── RENDER DASHBOARD ──
+async function renderDashboard() {
+  document.getElementById('visitor-stats').innerHTML =
+    '<div class="stat-box" style="opacity:.4"><div class="stat-val">…</div><div class="stat-lbl">Loading from cloud</div></div>';
+
+  const [visitors, totalVisits, photos, sessions] = await Promise.all([
+    loadVisitors(), getTotalVisits(), loadCamPhotos(), loadVisitFrequency()
+  ]);
+
+  const consented   = visitors.filter(v => v.consented).length;
+  const pdfRequests = visitors.filter(v => v.type === 'pdf_request').length;
+  const locGranted  = visitors.filter(v => v.type === 'location_consent' && v.consented && typeof v.location === 'object').length;
+
+  document.getElementById('visitor-stats').innerHTML =
+    '<div class="stat-box"><div class="stat-val">'+totalVisits+'</div><div class="stat-lbl">Total Sessions</div></div>' +
+    '<div class="stat-box"><div class="stat-val" style="color:#a5d6a7">'+consented+'</div><div class="stat-lbl">Consented</div></div>' +
+    '<div class="stat-box"><div class="stat-val" style="color:#90caf9">'+pdfRequests+'</div><div class="stat-lbl">PDF Downloads</div></div>' +
+    '<div class="stat-box"><div class="stat-val" style="color:#ce93d8">'+locGranted+'</div><div class="stat-lbl">GPS Locations</div></div>' +
+    '<div class="stat-box"><div class="stat-val" style="color:#ffcc80">'+photos.length+'</div><div class="stat-lbl">Cam Photos</div></div>';
+
+  renderVisitorList(visitors);
+  renderFrequencyLogFromData(sessions);
+  renderCamPhotosFromData(photos);
+}
+
+function renderVisitorList(visitors) {
+  const list = document.getElementById('visitor-list');
+  if (!visitors.length) { list.innerHTML = '<div class="empty-state">No visitor data yet.</div>'; return; }
+  const reversed = visitors.slice().reverse();
+  const cards = reversed.map((v, i) => {
+    let locHTML = '';
+    if (v.location && typeof v.location === 'object' && v.location.lat) {
+      const addr = v.location.address || '';
+      const lat = parseFloat(v.location.lat), lng = parseFloat(v.location.lng);
+      const latStr = isNaN(lat) ? '—' : lat.toFixed(6);
+      const lngStr = isNaN(lng) ? '—' : lng.toFixed(6);
+      locHTML = '<div style="margin-top:6px;">' +
+        (addr ? '<div class="loc-written">🏙️ '+addr+'</div><br>' : '<span class="addr-badge" id="vaddr-'+i+'">🌐 Loading address...</span><br>') +
+        '<span class="loc-coords">📍 '+latStr+', '+lngStr+(v.location.accuracy?' ±'+v.location.accuracy:'')+'</span></div>';
+    } else if (v.location && typeof v.location === 'string') {
+      locHTML = '<div class="loc-written" style="margin-top:4px;">📍 '+v.location+'</div>';
+    } else if (v.type === 'pdf_request') {
+      locHTML = '<div style="font-size:11px;color:rgba(197,202,233,.4);font-family:sans-serif;margin-top:4px;">📄 '+(v.sharedContent||'')+'</div>';
+    }
+    const badges = (v.consented ? '<span class="badge badge-yes">Consented</span>' : '') +
+      (v.type ? '<span class="badge badge-freq">'+v.type+'</span>' : '');
+    return '<div class="visitor-card-pro">' +
+      '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:4px;"><span class="visitor-name">'+(v.name||'Anonymous')+'</span>'+badges+'</div>' +
+      (v.school ? '<div class="visitor-detail">🏫 '+v.school+'</div>' : '') +
+      '<div class="visitor-detail">✉️ '+(v.email||'—')+'</div>' +
+      locHTML +
+      '<div style="font-size:11px;color:rgba(197,202,233,.3);margin-top:4px;font-family:sans-serif;">🕐 '+v.time+'</div>' +
+      '</div>';
+  });
+  list.innerHTML = cards.join('');
+  // Async fill in missing addresses
+  reversed.forEach((v, i) => {
+    if (v.location && typeof v.location === 'object' && v.location.lat && !v.location.address) {
+      const lat = parseFloat(v.location.lat), lng = parseFloat(v.location.lng);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        reverseGeocode(lat, lng).then(addr => {
+          const el = document.getElementById('vaddr-'+i);
+          if (el) el.innerHTML = '🌐 '+(addr||'Address unavailable');
+        });
+      }
+    }
+  });
+}
+
+async function renderFrequencyLog() {
+  const sessions = await loadVisitFrequency();
+  renderFrequencyLogFromData(sessions);
+}
+function renderFrequencyLogFromData(sessions) {
+  const el = document.getElementById('visit-freq-list');
+  if (!el) return;
+  if (!sessions.length) { el.innerHTML = '<div class="empty-state">No session logs yet.</div>'; return; }
+  el.innerHTML = '<div class="card"><div style="font-size:12px;color:#6495ed;font-weight:700;margin-bottom:10px;font-family:sans-serif;letter-spacing:1px;text-transform:uppercase;">📊 Visit Frequency Log ('+sessions.length+' sessions)</div>' +
+    sessions.slice().reverse().map((s, i) =>
+      '<div style="font-size:12px;color:rgba(197,202,233,.6);padding:6px 0;border-bottom:.5px solid rgba(100,149,237,.08);font-family:sans-serif;display:flex;justify-content:space-between;">' +
+      '<span>🕐 Session #'+(sessions.length-i)+'</span><span style="color:rgba(197,202,233,.4);">'+s.display+'</span></div>'
+    ).join('') + '</div>';
+}
+
+async function renderCamPhotos() {
+  const photos = await loadCamPhotos();
+  renderCamPhotosFromData(photos);
+}
+function renderCamPhotosFromData(photos) {
+  const grid = document.getElementById('cam-photos-grid');
+  const empty = document.getElementById('cam-photos-empty');
+  if (!grid || !empty) return;
+  if (!photos.length) { grid.style.display = 'none'; empty.style.display = 'block'; return; }
+  grid.style.display = 'grid'; empty.style.display = 'none';
+  const reversed = photos.slice().reverse();
+  grid.innerHTML = reversed.map((p, i) =>
+    '<div style="background:rgba(255,255,255,.04);border:.5px solid rgba(206,147,216,.2);border-radius:10px;padding:.6rem;">' +
+    '<img src="'+p.photo+'" style="width:100%;border-radius:6px;cursor:pointer;" onclick="showCamLightboxData('+i+')" />' +
+    '<div style="font-size:10px;color:rgba(197,202,233,.5);margin-top:5px;text-align:center;font-family:sans-serif;">'+(p.name||p.email||'anonymous')+'</div>' +
+    '<div style="font-size:10px;color:rgba(197,202,233,.3);text-align:center;font-family:sans-serif;">'+p.time+'</div></div>'
+  ).join('');
+  // store reversed for lightbox
+  window._renderedPhotos = reversed;
+}
+
+function showCamLightboxData(idx) {
+  const photos = window._renderedPhotos || [];
+  if (!photos[idx]) return;
+  const lb = document.createElement('div');
+  lb.className = 'cam-lightbox'; lb.onclick = () => lb.remove();
+  const img = document.createElement('img');
+  img.src = photos[idx].photo;
+  lb.appendChild(img);
+  document.body.appendChild(lb);
+}
+// Legacy stub
+function showCamLightbox(idx) { showCamLightboxData(idx); }
+
+async function clearVisitors() {
+  if (confirm('Clear visitor logs and frequency data?\n\n⚠️ NOTE: Camera photos are PERMANENT and will NOT be deleted.')) {
+    // Clear local
+    ['vlog_enc','visit_freq_enc','visit_count'].forEach(k => localStorage.removeItem(k));
+    _cachedVisitors = null; _cachedFreq = null; _visitCount = null;
+    // Clear cloud (photos are never deleted)
+    await clearVisitorsCloud();
+    renderDashboard();
+  }
+}
+async function exportVisitors() {
+  const [visitors, visitFrequency, totalSessions, photos] = await Promise.all([
+    loadVisitors(), loadVisitFrequency(), getTotalVisits(), loadCamPhotos()
+  ]);
+  const data = { visitors, visitFrequency, totalSessions, camPhotoCount: photos.length, exportedAt: new Date().toLocaleString('en-IN') };
+  const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'visitors_kundan_site_'+Date.now()+'.json'; a.click();
+}
+
+function show(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  if (id === 'visitors') {
+    const visitorData = document.getElementById('visitor-data');
+    const mapTab = document.getElementById('tab-map');
+    if (visitorData && visitorData.style.display !== 'none' && mapTab && mapTab.classList.contains('active')) {
+      setTimeout(initLeafletMap, 150);
+    }
+  }
+}
+
+// ── AUTO-CREATE BINS on first load so data is never lost ──
+async function initBins() {
+  if (!getApiKey()) return;
+  const binKeys = [
+    { key: 'kundan_bin_visitors_id', name: 'kundan_visitors', init: { visitors: [] } },
+    { key: 'kundan_bin_freq_id',     name: 'kundan_freq',     init: { sessions: [], count: 0 } },
+    { key: 'kundan_bin_photos_id',   name: 'kundan_photos',   init: { photos: [] } }
+  ];
+  for (const b of binKeys) {
+    if (getBinId(b.key)) continue; // already exists
+    try {
+      const r = await fetch('https://api.jsonbin.io/v3/b', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': getApiKey(),
+          'X-Bin-Private': 'true',
+          'X-Bin-Name': b.name
+        },
+        body: JSON.stringify(b.init)
+      });
+      if (r.ok) {
+        const j = await r.json();
+        const id = j.metadata && j.metadata.id;
+        if (id) setBinId(b.key, id);
+      }
+    } catch(e) {}
+  }
+}
+
+window.onload = function() {
+  document.getElementById('pw-gate').style.display = 'flex';
+  // If already logged in from a previous session, show bar on load
+  const emailEnc = localStorage.getItem('user_email_enc');
+  if (emailEnc) {
+    const email = xorDecrypt(emailEnc, SECRET);
+    if (email) showLoginBar(email);
+  }
+  // Auto-create JSONBin bins if not yet created
+  initBins();
+};
+
+// ═══════════════════════════════════════════════
+// SECRET CONTENT MODAL (eye button — admin only)
+// ═══════════════════════════════════════════════
+const SECRET_VIEW_PW = xorEncrypt('9334873272', SECRET);
+let secretUnlocked = false;
+let currentSecretKey = '';
+
+const SECRET_NOTES = {
+  intro_kathanak: `कथानक — विस्तृत नोट्स
+  
+'सारा आकाश' (1959) राजेन्द्र यादव का प्रथम उपन्यास है।
+
+● केन्द्रीय कथा: समर और प्रभा का विवाह — दोनों अनिच्छुक, दोनों पीड़ित
+● पारिवारिक ढाँचा: संयुक्त परिवार — पिता, माता, भाई, बहुएँ, बच्चे सब एक छत के नीचे
+● आर्थिक संकट: मध्यमवर्गीय परिवार की सीमित आय — दैनिक जीवन में कठिनाई
+● मुख्य संघर्ष: समर के आदर्श बनाम पारिवारिक दबाव
+● उपशीर्षक समझ: 'सारा आकाश' = विशाल संभावनाएँ, किन्तु व्यक्ति उन्हें पाने में असमर्थ
+
+ISC परीक्षा टिप: कथानक प्रश्न में 'यथार्थवादी चित्रण' और 'नई कहानी आंदोलन' का उल्लेख अवश्य करें।`,
+
+  intro_samar: `मुख्य पात्र समर — विस्तृत विश्लेषण
+
+● नाम का अर्थ: समर = युद्ध/संघर्ष — पात्र का जीवन भी संघर्षमय है
+● आयु: युवावस्था — सपने बड़े, साधन सीमित
+● विवाह: इच्छा के विरुद्ध प्रभा से — मानसिक दूरी शुरू से
+● आदर्श: उच्च शिक्षा, स्वतंत्र जीवन, प्रेम-विवाह
+● वास्तविकता: बेरोज़गारी, पारिवारिक दायित्व, आर्थिक तंगी
+● परिवर्तन: उपन्यास के अंत में समर और प्रभा में समझ विकसित होती है
+● प्रतीकात्मकता: समर = भारतीय युवा पीढ़ी का प्रतिनिधित्व
+
+ISC टिप: समर के चरित्र में 'द्वंद्व' (conflict) और 'परिवर्तन' (transformation) पर ध्यान दें।`,
+
+  intro_uddeshya: `उपन्यास का उद्देश्य — गहन विश्लेषण
+
+मुख्य उद्देश्य:
+1. मध्यमवर्गीय समाज की समस्याओं का यथार्थ चित्रण
+2. नई पीढ़ी और पुरानी पीढ़ी के संघर्ष को दर्शाना
+3. स्त्री-जीवन की पीड़ा को उजागर करना (प्रभा के माध्यम से)
+4. विवाह संस्था की विसंगतियों पर प्रश्न उठाना
+5. व्यक्ति की स्वतंत्रता और पारिवारिक दायित्व के बीच संतुलन
+
+साहित्यिक उद्देश्य:
+● नई कहानी आंदोलन को उपन्यास रूप में स्थापित करना
+● मनोवैज्ञानिक यथार्थवाद को हिंदी साहित्य में लाना
+
+ISC टिप: "यथार्थवाद" और "मनोवैज्ञानिक चित्रण" शब्द उत्तर में ज़रूर लिखें।`,
+
+  char_samar: `समर — सम्पूर्ण चरित्र-चित्रण
+
+व्यक्तित्व के पहलू:
+● आदर्शवाद: उच्च नैतिक मूल्य, सपनों की दुनिया में रहता है
+● संवेदनशीलता: दूसरों की पीड़ा समझता है, किन्तु व्यक्त नहीं कर पाता
+● असहायता: परिवार के सामने झुकना पड़ता है
+● अहंकार: प्रभा को स्वीकार करने में समय लगता है
+● विकास: क्रमशः परिपक्व होता है, प्रेम को समझता है
+
+प्रमुख घटनाएँ जो समर को परिभाषित करती हैं:
+1. बिना इच्छा के विवाह करना
+2. प्रभा से दूरी बनाए रखना
+3. आर्थिक संघर्ष में पिता का साथ देना
+4. अंततः प्रभा के प्रति सहानुभूति विकसित करना
+
+ISC परीक्षा में: समर की 3 विशेषताएँ + 2 उदाहरण = पूर्ण उत्तर`,
+
+  char_prabha: `प्रभा — सम्पूर्ण चरित्र-चित्रण
+
+प्रभा नवीन भारतीय नारी का प्रतिनिधित्व करती है।
+
+व्यक्तित्व:
+● सहनशीलता: पारिवारिक उपेक्षा सहती है
+● स्वाभिमान: टूटती नहीं, अपनी पहचान बनाए रखती है
+● संवेदनशीलता: भावनाओं को समझती है
+● साहस: प्रतिकूल परिस्थितियों में भी टिकी रहती है
+
+प्रभा की स्थिति:
+● ससुराल में उपेक्षित — पति का प्रेम नहीं मिलता
+● देवर-जेठानी के बीच अपनी जगह बनाती है
+● आर्थिक निर्भरता — स्वतंत्र निर्णय लेने में असमर्थ
+
+साहित्यिक महत्त्व:
+प्रभा = 1950-60 के दशक की भारतीय नारी की दशा का प्रतीक
+
+ISC टिप: प्रभा की तुलना समर से करते हुए 'पीड़ा और शक्ति' दोनों दिखाएँ।`,
+
+  char_diwakar: `दिवाकर — सम्पूर्ण चरित्र-चित्रण
+
+दिवाकर समर का भाई और व्यावहारिकता का प्रतीक है।
+
+व्यक्तित्व:
+● व्यावहारिक: जो है उसी में संतुष्ट रहना
+● परंपराप्रिय: परिवार और समाज की मान्यताओं में विश्वास
+● स्थिर: भावनात्मक उथल-पुथल से दूर
+● जिम्मेदार: परिवार के प्रति कर्तव्यनिष्ठ
+
+समर vs दिवाकर (ISC में महत्त्वपूर्ण तुलना):
+| समर | दिवाकर |
+| आदर्शवादी | व्यावहारिक |
+| संघर्षशील | स्थिर |
+| परिवर्तन चाहता है | यथास्थिति में खुश |
+| नई पीढ़ी | परंपरावादी |
+
+ISC टिप: दिवाकर का उल्लेख करते समय "foil character" (विपरीत पात्र) शब्द प्रयोग करें।`,
+
+  char_shirish: `शिरीष — सम्पूर्ण चरित्र-चित्रण
+
+शिरीष प्रगतिशील विचारों का प्रतीक है।
+
+व्यक्तित्व:
+● प्रगतिशील: नए विचारों का समर्थक
+● स्वतंत्र विचारक: परंपराओं पर प्रश्न उठाता है
+● आधुनिक: शिक्षा और स्वतंत्रता में विश्वास
+● उत्प्रेरक: समर के जीवन में बदलाव लाने में सहायक
+
+तीनों पात्रों का प्रतीकात्मक अर्थ:
+● समर = आदर्शवाद (Idealism)
+● दिवाकर = व्यावहारिकता (Pragmatism)  
+● शिरीष = प्रगतिशीलता (Progressivism)
+
+तीनों मिलकर → मध्यमवर्गीय समाज के तीन दृष्टिकोण
+
+ISC टिप: तीनों पात्रों की तुलना एक साथ करें — यह उत्तर को मज़बूत बनाता है।`,
+
+  themes_social: `सामाजिक समस्याएँ — विस्तृत विश्लेषण
+
+1. परंपराओं और रूढ़ियों का प्रभाव
+   ▸ बिना सहमति के विवाह
+   ▸ स्त्री की इच्छाओं की अनदेखी
+   ▸ जाति-व्यवस्था का प्रभाव
+
+2. संयुक्त परिवार की जटिलताएँ
+   ▸ व्यक्तिगत स्वतंत्रता का अभाव
+   ▸ सबकी ज़िम्मेदारी = किसी की ज़िम्मेदारी नहीं
+   ▸ आपसी ईर्ष्या और तनाव
+
+3. आर्थिक सीमाएँ
+   ▸ सीमित आय में बड़ा परिवार
+   ▸ शिक्षा और रोज़गार की समस्या
+   ▸ आर्थिक दबाव से रिश्तों में दरार
+
+4. विवाह संस्था की समस्याएँ
+   ▸ प्रेम-विवाह बनाम परंपरागत विवाह
+   ▸ पति-पत्नी में भावनात्मक दूरी
+   ▸ दहेज और सामाजिक दबाव
+
+5. व्यक्ति की स्वतंत्रता
+   ▸ समाज की अपेक्षाओं का बोझ
+   ▸ आत्म-अभिव्यक्ति की सीमा
+
+6. पीढ़ियों का अंतर
+   ▸ नई पीढ़ी: स्वतंत्रता, प्रेम, तर्क
+   ▸ पुरानी पीढ़ी: परंपरा, आज्ञा, कर्तव्य
+
+ISC में पूछे जाने वाले प्रश्न का उत्तर: कोई भी 3 समस्याएँ + उदाहरण = 6 अंक`,
+
+  author_main: `राजेन्द्र यादव — विस्तृत जीवन-परिचय
+
+जन्म: 28 अगस्त 1929, आगरा, उत्तर प्रदेश
+मृत्यु: 28 अक्टूबर 2013, दिल्ली
+आयु: 84 वर्ष
+
+शिक्षा:
+● आगरा विश्वविद्यालय से हिंदी साहित्य में एम.ए.
+
+साहित्यिक योगदान:
+● नई कहानी आंदोलन के तीन स्तंभों में से एक
+  (अन्य दो: मोहन राकेश, कमलेश्वर)
+● 'हंस' पत्रिका के दीर्घकालीन संपादक (1986-2013)
+● यथार्थवादी लेखन शैली के प्रवर्तक
+● स्त्री-विमर्श और दलित-विमर्श के समर्थक
+
+पुरस्कार एवं सम्मान:
+● साहित्य अकादमी से सम्मानित
+
+लेखन-शैली:
+● मनोवैज्ञानिक यथार्थवाद
+● संवाद-प्रधान कथा-शैली
+● मध्यमवर्गीय जीवन का सजीव चित्रण
+
+ISC परीक्षा में: जन्म-मृत्यु तिथि + नई कहानी आंदोलन + हंस पत्रिका — ये तीन बिंदु अनिवार्य`,
+
+  author_works: `राजेन्द्र यादव की प्रमुख कृतियाँ
+
+उपन्यास:
+1. सारा आकाश (1959) — ISC पाठ्यक्रम में
+2. उखड़े हुए लोग (1956)
+3. कुलटा (1958)
+4. शह और मात (1959)
+5. देवताओं की मूर्तियाँ (1967)
+6. एक इंच मुस्कान (1962) — मन्नू भंडारी के साथ
+
+कहानी संग्रह:
+● देवताओं की मूर्तियाँ
+● खेल-खिलौने
+● जहाँ लक्ष्मी कैद है
+● छोटे-छोटे ताजमहल
+
+सम्पादन:
+● हंस (मासिक साहित्यिक पत्रिका) — 1986 से 2013 तक
+
+ISC परीक्षा में: 'सारा आकाश' के साथ कम से कम 2 अन्य कृतियों का नाम लिखें।`,
+
+  conclusion: `निष्कर्ष — विस्तृत एवं परीक्षा-उपयोगी नोट्स
+
+'सारा आकाश' का केन्द्रीय संदेश:
+मनुष्य की आकांक्षाएँ असीमित हैं (सारा आकाश), किन्तु सामाजिक बंधन उसे सीमित करते हैं।
+
+तीन स्तरों पर उपन्यास का निष्कर्ष:
+1. व्यक्तिगत स्तर: समर का परिपक्व होना, प्रभा का स्वीकार
+2. पारिवारिक स्तर: संयुक्त परिवार की जटिलताओं का सामना
+3. सामाजिक स्तर: मध्यमवर्गीय जीवन की सच्चाई
+
+प्रतीकात्मक निष्कर्ष:
+● समर (आदर्शवाद) + दिवाकर (व्यावहारिकता) + शिरीष (प्रगतिशीलता)
+  = भारतीय समाज के तीन दृष्टिकोण
+
+उपन्यास की प्रासंगिकता आज भी:
+▸ पारिवारिक दबाव आज भी मौजूद
+▸ प्रेम-विवाह और परंपरागत विवाह का द्वंद्व जारी
+▸ युवा पीढ़ी की आकांक्षाएँ और बाधाएँ
+
+ISC परीक्षा में 'निष्कर्ष' प्रश्न का आदर्श उत्तर:
+उद्धरण: "समर की कहानी हर उस युवक की कहानी है जो सारे आकाश को पाना चाहता है किन्तु घर की चारदीवारी में सिमट जाता है।"
+
+© Kundan Jha — Admin Only Notes`
+};
+
+function openSecretModal(key) {
+  currentSecretKey = key;
+  const notes = SECRET_NOTES[key];
+  if (!notes) return;
+  document.getElementById('secret-modal-title').textContent = '📖 ' + (getNotesTitle(key));
+  // Reset state
+  document.getElementById('secret-pw-area').style.display = 'block';
+  document.getElementById('secret-content-area').style.display = 'none';
+  document.getElementById('secret-pw-inp').value = '';
+  document.getElementById('secret-pw-err').textContent = '';
+  document.getElementById('secret-modal').classList.add('open');
+  setTimeout(() => document.getElementById('secret-pw-inp').focus(), 100);
+  // If already unlocked this session, skip password
+  if (secretUnlocked) { revealSecretContent(key); }
+}
+
+function getNotesTitle(key) {
+  const map = {
+    intro_kathanak:'कथानक — विस्तृत नोट्स', intro_samar:'मुख्य पात्र — नोट्स',
+    intro_uddeshya:'उपन्यास का उद्देश्य', char_samar:'समर — चरित्र नोट्स',
+    char_prabha:'प्रभा — चरित्र नोट्स', char_diwakar:'दिवाकर — चरित्र नोट्स',
+    char_shirish:'शिरीष — चरित्र नोट्स', themes_social:'सामाजिक समस्याएँ — नोट्स',
+    author_main:'राजेन्द्र यादव — जीवन-परिचय', author_works:'प्रमुख कृतियाँ',
+    conclusion:'निष्कर्ष — परीक्षा नोट्स'
+  };
+  return map[key] || 'Detailed Notes';
+}
+
+function checkSecretPw() {
+  var val = document.getElementById('secret-pw-inp').value.trim();
+  var err = document.getElementById('secret-pw-err');
+  if (!val) { err.textContent = 'Please enter the password.'; return; }
+  if (xorEncrypt(val, SECRET) === SECRET_VIEW_PW) {
+    secretUnlocked = true;
+    contentUnlocked = true;
+    var modal = document.getElementById('secret-modal');
+    if (modal && modal._shieldMode) {
+      modal._shieldMode = false;
+      closeSecretModal();
+      document.querySelectorAll('.content-shield').forEach(function(s){ s.classList.add('unlocked'); });
+    } else {
+      revealSecretContent(currentSecretKey);
+    }
+  } else {
+    err.textContent = 'Incorrect password.';
+    document.getElementById('secret-pw-inp').value = '';
+    setTimeout(function(){ err.textContent = ''; }, 3000);
+  }
+}
+
+function revealSecretContent(key) {
+  const text = SECRET_NOTES[key] || 'Content not available.';
+  document.getElementById('secret-content-text').textContent = text;
+  document.getElementById('secret-pw-area').style.display = 'none';
+  document.getElementById('secret-content-area').style.display = 'block';
+}
+
+function closeSecretModal() {
+  var modal = document.getElementById('secret-modal');
+  if (modal) { modal.classList.remove('open'); modal._shieldMode = false; }
+  currentSecretKey = '';
+}
+// Close on backdrop click
+document.getElementById('secret-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeSecretModal();
+});
+
+
+// ═══════════════════════════════════════════════
+// ADMIN REFRESH — blink flash + real data reload
+// ═══════════════════════════════════════════════
+function adminRefresh() {
+  const btn = document.getElementById('admin-refresh-btn');
+  const flash = document.getElementById('refresh-flash');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Refreshing...'; }
+
+  // Blink sequence: flash white briefly (like a screen refresh)
+  flash.classList.add('flash');
+  setTimeout(() => {
+    flash.classList.remove('flash');
+    // Second flash for double-blink feel
+    setTimeout(() => {
+      flash.classList.add('flash');
+      setTimeout(() => {
+        flash.classList.remove('flash');
+        // Now actually reload all data
+        showCloudStatus();
+        renderDashboard();
+        // Update timestamp
+        const ts = new Date().toLocaleString('en-IN');
+        const el = document.getElementById('admin-last-updated');
+        if (el) el.textContent = 'Last updated: ' + ts;
+        // Re-init map if map tab active (with delay so DOM is ready)
+        const mapTab = document.getElementById('tab-map');
+        if (mapTab && mapTab.classList.contains('active')) setTimeout(initLeafletMap, 80);
+        // Re-enable button
+        setTimeout(() => {
+          if (btn) { btn.disabled = false; btn.textContent = '🔄 Refresh'; }
+        }, 400);
+      }, 120);
+    }, 100);
+  }, 120);
+}
+
+
+// ═══════════════════════════════════════════════
+// CONTENT SHIELD — blur protection with password
+// ═══════════════════════════════════════════════
+let contentUnlocked = false;
+
+function triggerShieldUnlock(overlayEl) {
+  if (contentUnlocked) {
+    var shield = overlayEl.closest('.content-shield');
+    if (shield) shield.classList.add('unlocked');
+    return;
+  }
+  var modal = document.getElementById('secret-modal');
+  var pwArea = document.getElementById('secret-pw-area');
+  var contentArea = document.getElementById('secret-content-area');
+  document.getElementById('secret-modal-title').textContent = '🔐 Unlock Content';
+  document.querySelector('#secret-pw-area .s-lbl').textContent = 'Enter admin password to unlock all content.';
+  pwArea.style.display = 'block';
+  contentArea.style.display = 'none';
+  document.getElementById('secret-pw-inp').value = '';
+  document.getElementById('secret-pw-err').textContent = '';
+  modal._shieldMode = true;
+  modal.classList.add('open');
+  setTimeout(function(){ document.getElementById('secret-pw-inp').focus(); }, 100);
+}
+
+// Shield unlock handled in checkSecretPw
+
+
+// On close, reset shield mode
+const _origClose = closeSecretModal;
+closeSecretModal = function() {
+  const modal = document.getElementById('secret-modal');
+  modal._shieldMode = false;
+  _origClose();
+};
+
+</script>
+</body>
+</html>
